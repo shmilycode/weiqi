@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./css/stylesheet.css" rel="stylesheet">
+  <link href="./bootstrap-datepicker/css/bootstrap-datepicker3.css" rel="stylesheet">
+  <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="./bootstrap-datepicker/js/bootstrap-datepicker.js"></script>
+  <script src="./bootstrap-datepicker/locales/bootstrap-datepicker.zh-CN.min.js"></script>
+  <script src="./js/index.js"></script>
+  <title>Shmily:通讯录</title>
+</head>
+<body>
+
+  <!--导航条-->
+<div class="m_header">
+<div class="container">
+<div class="row">
+<div class="col-xs-10 col-xs-offset-1">
+<nav class="m_navbar" role="navigation">
+  <div class="container-fluid">
+    <!--左边的标题-->
+    <div class="navbar-header m_navbar-header">
+      <button type="button" class="navbar-toggle collapsed btn-lg" data-toggle="collapse" data-target="#right-navbar-login">
+        <span class="glyphicon glyphicon-th-large"></span>
+      </button>
+      <a class="navbar-brand m_header_text" href="#">
+        <strong>Shmily</strong>
+      </a>
+    </div><!--左边标题-->
+
+    <!--右边选项-->
+    <!--注销时的选项-->
+    <div class="collapse navbar-collapse" id="right-navbar-logout">
+      <ul class="nav navbar-nav navbar-right">
+        <li><button class="btn btn-link m_navbar-btn" role="button" data-toggle="modal" data-target="#signupModal" id="loginBtn">登录</button></li>
+        <li><button class="btn btn-primary m_navbar-btn active" role="button" data-toggle="modal" data-target="#signupModal" id="registBtn">注册</button></li>
+      </ul>
+    </div><!--注销时的选项-->
+
+    <!--登录后的选项-->
+    <div class="collapse navbar-collapse sr-only" id="right-navbar-login">
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+	  <div class="btn-group">
+	    <button type="button" class="btn btn-link dropdown-toggle m_navbar-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	      陈维祺<span class="caret"></span>
+	    </button>
+	    <ul class="dropdown-menu">
+	      <li><a data-toggle="modal" data-target="#signupModal" style="cursor: pointer;">个人信息</a></li>
+	      <li><a data-toggle="modal" data-target="#signupModal" style="cursor: pointer;">修改信息</a></li>
+	      <li><a href="#">退出</a></li>
+	    </ul>
+	  </div>
+	</li>
+      </ul>
+    </div><!--登录后的选项-->
+  </div><!--div class="container-fluid"-->
+</nav>
+</div>
+</div>
+</div><!--导航条-->
+</div>
+
+<!--按键弹窗-->
+<div class="modal fade" id="signupModal" tabindex="-1" role="dialog" data-backdrop="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">
+	  <span aria-hidden="true">&times;</span>
+	</button>
+	<h3 id="modal-title" class="modal-title text-center">注册</h3>
+	<p class="text-center" style='color: red;' id="warn-text"></p>
+      </div><!--div class="modal-header"-->
+
+      <div class="modal-body m_modal-body">
+        <form class="form-horizontal" id="modal-form">   
+	  <!--姓名框-->
+	  <div class="form-group">
+	    <label class="sr-only" for="nameInput">姓名</label>
+	    <div class="col-sm-6 col-sm-offset-3">
+	      <input type="text" class="form-control m_input" name='modal-input' id="nameInput" placeholder="姓名">
+	    </div>
+            <div class="col-sm-3 sr-only" id='name_helpspan'>
+   	      <span class="help-block">请输入真实的姓名</span>
+	    </div>
+	  </div><!--姓名框-->
+
+	  <!--密码框-->
+	  <div class="form-group">
+	    <label class="sr-only" for="nameInput">密码</label>
+	    <div class="col-sm-6 col-sm-offset-3">
+	      <input type="password" class="form-control m_input" name='modal-input' id="keywordInput" placeholder="密码">
+	    </div>
+            <div class="col-sm-3 sr-only" id='keyword_helpspan'>
+   	      <span class="help-block sr-only">创建密码</span>
+	    </div>
+	  </div><!--密码框-->
+
+	  <div id="hide_login">
+	  <!--电话框-->
+	  <div class="form-group">
+	    <label class="sr-only" for="telInput">电话号码</label>
+	    <div class="col-sm-6 col-sm-offset-3">
+	      <div class="input-group" role="group">
+   	        <input type="tel" class="form-control m_input" AUTOCOMPLETE="OFF" name='modal-input' id="telInput" placeholder="电话号码">
+		<span class="input-group-btn">
+		  <button class="btn btn-default" type="button" id="addTelBtn"><span class="glyphicon glyphicon-plus"></span></button>
+		</span>
+	      </div>
+	    </div>
+	    <div class="col-sm-6 col-sm-offset-3">
+  	      <div class="list-group" id="telListGroup">
+	      </div><!--div class="list-group"-->
+	    </div>
+            <div class="col-sm-3 sr-only" id='tel_helpspan'>
+   	      <span class="help-block sr-only">请输入正确的电话号码,可添加多个号码</span>
+	    </div>
+	  </div><!--电话框-->
+
+	   <!--电子邮箱框-->
+	  <div class="form-group">
+	    <label class="sr-only" for="mailInput">电子邮箱</label>
+	    <div class="col-sm-6 col-sm-offset-3">
+	      <input type="email" class="form-control m_input" name='modal-input' id="mailInput" placeholder="电子邮箱">
+	    </div>
+            <div class="col-sm-3 sr-only" id='mail_helpspan'>
+   	      <span class="help-block">请输入正确的邮箱，帮助管理员对你的注册进行验证</span>
+	    </div>
+	  </div><!--电子邮箱框-->
+
+	  <!--学历选择框-->
+	  <div class="form-group">
+	    <label class="sr-only" for="eduInput">学历</label>
+	    <div class="col-sm-6 col-sm-offset-3">
+	      <div class="input-group">
+	        <input type="" class="form-control m_input" name='modal-input' id="eduInput" placeholder="最高学历">
+	        <div class="input-group-btn">
+		  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">学历<span class="caret"></span>
+		  </button>
+		  <ul class="dropdown-menu dropdown-menu-right" id="eduDropdown">
+		    <li><a href="#">初中</a></li>
+		    <li><a href="#">高中</a></li>
+		    <li><a href="#">大学</a></li>
+		    <li><a href="#">研究生及博士生</a></li>
+		  </ul>
+	        </div>
+	      </div>
+	    </div>
+            <div class="col-sm-3 sr-only" id='edu_helpspan'>
+   	      <span class="help-block">请以拿到的毕业证的学历为准</span>
+	    </div>
+	  </div><!--学历选择框-->
+	 
+	  <!--入学年份输入框-->
+	  <div class="form-group">
+	    <label class="sr-only" for="dateInpu">入学日期</label>
+	    <div class="col-sm-6 col-sm-offset-3">
+		<div class="input-group date" id = "dateInput">
+	          <input type="text" class="form-control" name='modal-input' placeholder="入学日期">
+		  <span class="input-group-addon">
+		      <i class="glyphicon glyphicon-calendar"></i>
+		  </span>
+		</div>
+	    </div>
+	    <div class="col-sm-3 sr-only" id='date_helpspan'>
+   	      <span class="help-block">请输入正确的入学日期</span>
+	    </div>
+	  </div><!--入学日期选择框-->
+	  <!--地区输入-->
+	  <div class="form-group">
+	    <label class="sr-only" for="addrInput">街道名称</label>
+	    <div class="col-sm-6 col-sm-offset-3">
+	      <input type="text" class="form-control m_input" name='modal-input' id="addrInput" placeholder="街道名称">
+	    </div>
+            <div class="col-sm-3 sr-only" id='addr_helpspan'>
+   	      <span class="help-block">请输入所住街道的名称，如河北街道，玉新街道等</span>
+	    </div>
+	  </div><!--地区输入框-->
+	  </div><!--div id="hide_login"-->
+	</form>
+      </div>
+
+      <div class="modal-footer">
+        <!--注册说明-->
+        <div class="text-left bg-danger" id="registerExplain">
+	  <h4>注册说明 </h4>
+	  <p id="ps">...</p>
+	</div>
+	<!--按键-->
+        <div class="col-sm-6 col-sm-offset-3">
+	  <div class="col-sm-6">
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="cancelBtn">取消</button>
+	  </div>
+	  <div class="col-sm-6">
+  	    <button type="button" class="btn btn-primary col-sm-6" id="regAndloginBtn">注册</button>
+	  </div>
+	</div>
+      </div>
+    </div><!--div class="modal-content"-->
+  </div><!--div class="modal-dialog"-->
+</div><!--按键弹窗-->
+
+  <!--主体-->
+<div >
+<!--包含背景图片的div-->
+  <div class="m_center-div" style="background-image:url(./image/background3.jpg);">
+    <div class="col-xs-12">
+      <div class="text-center">
+        <div class="m_background-text">
+	  <!--标签-->
+          <h1 class="m_display-text">快看！UFO</h1>
+	  <!--输入框-->
+	  <div class="form-group row">
+	    <center><div class="input-group col-xs-10 col-sm-4">
+  	      <input type="text" placeholder="friends" class="form-control m_search-input">
+	      <span class="input-group-btn m_input">
+	        <button class="btn btn-default" type="button" style="border-color: #fff;">
+		  <span class="glyphicon glyphicon-search"></span>
+		</button>
+              </span>
+	    </div></center>
+	  </div>
+	  <p class="text-primary">
+	    <a class="btn btn-link" role="button" href="#">
+	    <strong><big>查看全部朋友</big></strong>
+	    </a>
+	  </p>
+	 </div><!--div class="center-text"-->
+      </div><!--div class="center-container"-->
+    </div><!--div class="col-xs-12"-->
+    <!--闪烁的字-->
+    <div class="col-md-12 m_flash_text">
+      <span id="flash_text"></span>
+      <span class="m_cursor">|</span>
+    </div>
+  </div><!--包含背景图片的div-->
+
+  <!--照片墙-->
+<div class="col-xs-10 col-xs-offset-1">
+  <div class="m_picture-wall">
+    <div class="m_container" id="picture-wall">
+      <div class="text-center">
+        <h1>照片墙</h1>
+      </div>
+      <div class="col-sm-6 col-md-6" id="pic_1">
+        <a href="#" data-toggle="modal" data-target="#picture" class="thumbnail">
+	  <img src="./picture-wall/picture (1).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+      <div class="col-sm-6 col-md-6" id="pic_2">
+        <a href="#" class="thumbnail">
+	  <img src="./picture-wall/picture (2).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+      <div class="col-sm-6 col-md-3" id="pic_3">
+        <a href="#" class="thumbnail">
+	  <img src="./picture-wall/picture (3).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+      <div class="col-sm-6 col-md-3" id="pic_4">
+        <a href="#" class="thumbnail">
+	  <img src="./picture-wall/picture (4).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+      <div class="col-sm-6 col-md-3" id="pic_5">
+        <a href="#" class="thumbnail">
+	  <img src="./picture-wall/picture (5).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+      <div class="col-sm-6 col-md-3" id="pic_6">
+        <a href="#" class="thumbnail">
+	  <img src="./picture-wall/picture (6).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+      <div class="col-sm-6 col-md-3" id="pic_7">
+        <a href="#" class="thumbnail">
+	  <img src="./picture-wall/picture (7).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+      <div class="col-sm-6 col-md-3" id="pic_8">
+        <a href="#" class="thumbnail">
+	  <img src="./picture-wall/picture (8).jpg" class="m_picture">
+	</a>
+      </div><!--div class="col-sm-6 col-md-3"-->
+    </div><!--div class="m_container"-->
+  </div><!--照片墙-->
+</div>
+
+  <!--放大的照片-->
+  <div class="modal fade" id="picture" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+	  <button type="button " class="close" data-dismiss="modal">
+	    <span aria-hidden="true">&times;</span>
+	  </button>
+	  <h4 id="picture-name" class="modal-title">照片名</h3>
+	</div>
+	<div class="modal-body">
+      	  <img src="./picture-wall/picture (1).jpg" class="m_full-screen-picture"></img>	
+	</div>
+	<div class="modal-footer">
+	<!--评论区-->
+	</div>
+      </div>
+    </div>
+  </div><!--放大的照片-->
+</div>
+</body>
+</html>
+
