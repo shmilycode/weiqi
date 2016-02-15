@@ -215,6 +215,7 @@ $(function(){
 		//设置注册按键与后台的交流
 		setRegistBtn: function(){
 			var regBtn = $('#regAndloginBtn');
+			regBtn.unbind();
 			regBtn.on('click', regist.postRegistData);
 		},
 		//初始化注册框
@@ -269,13 +270,15 @@ $(function(){
 			},
 			function(data, status){
 				//登录成功
+				var userData = {'name': 'weiqi'};
 				if(success)
-					user.userInit();
+					user.userInit(userData);
 			});
 		},
 		//设置登录按键与后台的交流
 		setLoginBtn: function(){
 			var loginBtn = $('#regAndloginBtn');
+			loginBtn.unbind();
 			loginBtn.on('click', login.postLoginData);
 		},
 
@@ -287,7 +290,7 @@ $(function(){
 	};
 
 	var user = {
-		userInit: function(){
+		userInit: function(userData){
 			clearModal();
 			regist.registInit();
 			$('#modal-title').text('用户信息');
@@ -296,8 +299,8 @@ $(function(){
 			$('.help-block').addClass('sr-only');
 			$('#registerExplain').addClass('sr-only');
 			$('#passwordForm').addClass('sr-only');
-			this.setUserName('weiqi');
-			this.setPWModal();
+			this.setUserName(userData.name);
+			this.setMenuBtn();
 		},
 
 		//设置用户名
@@ -335,6 +338,113 @@ $(function(){
 			$('#updatePWBtn').on('click', user.updatePW);
 				
 		},
+
+		//设置用户信息
+		setUserData: function(userData){
+			$('#nameInput').val(userData.name);
+			var telNumbers = userData.telNumbers;
+			for( tel in telNumbers){
+				$('#telInput').val(tel);
+				$('#addTelBtn').click();
+			}
+			$('#mailInput').val(userData.email);
+			$('#eduInput').val(userData.education);
+			$('#dateInput').children('input').val(userData.eduDate);
+			$('#addrInput').val(userData.address);
+		},
+
+		//保存用户修改信息
+		updateUserData: function(){
+			$('warn-text').text('');
+			var name=$('#nameInput').val();
+			var email = $('#mailInput').val();
+			$('#addTelBtn').click();
+			var telGroup = $('#telListGroup').find('input');
+			var telNumbers = new Array();
+			$.each(telGroup, function(index, telInput){
+				if(telInput.value)
+					telNumbers.push(telInput.value);
+			});
+			var education = $('#eduInput').val();
+			var eduDate = $('#dateInput input').val();
+			var address = $('#addrInput').val();
+
+			//发送数据到服务端
+			$.post("index.php",
+			{
+				operaton: 'updateUserData',
+				userId: userData.id,
+				name: name,
+				email: email,
+				telphone: telNumbers,
+				education: education,
+				eduDate: eduDate,
+				address: address
+			},
+			function(data, status){
+			});
+
+		},
+
+		setUpdateBtn: function(){
+
+			$('#regAndloginBtn').unbind();
+			$('#regAndloginBtn').on('click', user.updateUserData);
+		},
+
+		setMenuBtn: function(){
+			$('#pw_li').on('click', function(){
+				$('#pw-warn-text').text('');
+				user.setPWModal();
+			});
+			$('#ud_li').on('click', function(){
+				$('#warn-text').text('');
+				user.setUpdateBtn();
+			});
+			$('#logoutBtn').on('click', function(){
+				$('#passwordForm').removeClass('sr-only');
+				$('#navbar-right-login').addClass('sr-only');
+				$('#navbar-right-logout').removeClass('sr-only');
+				user.setUserName('');
+			});
+		}
+	};
+	var pictureWall = {
+		pictureWallInit: function(){
+			this.addLgPicture('picture (1).jpg');
+			this.addLgPicture('picture (2).jpg');
+			this.addSmPicture('picture (3).jpg');
+			this.addSmPicture('picture (4).jpg');
+			this.addSmPicture('picture (5).jpg');
+			this.addSmPicture('picture (6).jpg');
+			this.addSmPicture('picture (7).jpg');
+			this.addSmPicture('picture (8).jpg');
+		},
+			
+		//添加大图片
+		addLgPicture: function(name){
+			var picDiv = $('<div></div>').addClass('col-xs-12 col-sm-6');
+			var thumbnail = $('<a></a>').addClass('thumbnail').attr({'href':'#','data-toggle':'modal', 'data-target':'#picture'});
+			thumbnail.append($('<img></img>').addClass('m_picture').attr("src", "../picture-wall/thumbnail/"+name));
+			thumbnail.on('click', function(){
+				$('#picture-name').text(name);
+				$('#full-picture').attr('src', "../picture-wall/fullpicture/"+name);
+			});
+			picDiv.append(thumbnail);
+			$('#picture-wall').append(picDiv);
+		},
+		//添加小图片
+		addSmPicture: function(name){
+			var picDiv = $('<div></div>').addClass('col-xs-6 col-sm-3');
+			var thumbnail = $('<a></a>').addClass('thumbnail').attr({'href':'#', 'data-toggle': 'modal', 'data-target':'#picture'});
+			thumbnail.append($('<img></img>').addClass('m_picture').attr("src", "../picture-wall/thumbnail/"+name));
+			thumbnail.on('click', function(){
+				$('#picture-name').text(name);
+				$('#full-picture').attr('src', "../picture-wall/fullpicture/"+name);
+			});
+			picDiv.append(thumbnail);
+			$('#picture-wall').append(picDiv);
+		},
 	};
 
 	$('#registBtn').on('click',function(){
@@ -345,7 +455,9 @@ $(function(){
 		login.loginInit();
 	});
 
-	user.userInit();
+	var userData = {'name': 'weiqi'};
+	user.userInit(userData);
+	pictureWall.pictureWallInit();
 });
 
 
