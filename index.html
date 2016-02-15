@@ -32,31 +32,29 @@
     </div><!--左边标题-->
 
     <!--右边选项-->
-    <!--注销时的选项-->
     <div class="collapse navbar-collapse" id="right-navbar-logout">
-      <ul class="nav navbar-nav navbar-right">
+      <!--注销时的选项-->
+      <ul class="nav navbar-nav navbar-right sr-only" id="right-navbar-logout">
         <li><button class="btn btn-link m_navbar-btn" role="button" data-toggle="modal" data-target="#signupModal" id="loginBtn">登录</button></li>
         <li><button class="btn btn-primary m_navbar-btn active" role="button" data-toggle="modal" data-target="#signupModal" id="registBtn">注册</button></li>
       </ul>
-    </div><!--注销时的选项-->
-
-    <!--登录后的选项-->
-    <div class="collapse navbar-collapse sr-only" id="right-navbar-login">
+      <!--登录后的选项-->
       <ul class="nav navbar-nav navbar-right">
         <li>
 	  <div class="btn-group">
 	    <button type="button" class="btn btn-link dropdown-toggle m_navbar-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	      陈维祺<span class="caret"></span>
+	    	<a id="userLabel"></a>
+	        <span class="caret"></span>
 	    </button>
 	    <ul class="dropdown-menu">
+	      <li><a data-toggle="modal" data-target="#updatePWModal" style="cursor: pointer;">修改密码</a></li>
 	      <li><a data-toggle="modal" data-target="#signupModal" style="cursor: pointer;">个人信息</a></li>
-	      <li><a data-toggle="modal" data-target="#signupModal" style="cursor: pointer;">修改信息</a></li>
 	      <li><a href="#">退出</a></li>
 	    </ul>
 	  </div>
 	</li>
       </ul>
-    </div><!--登录后的选项-->
+    </div><!--右边的选项-->
   </div><!--div class="container-fluid"-->
 </nav>
 </div>
@@ -90,7 +88,7 @@
 	  </div><!--姓名框-->
 
 	  <!--密码框-->
-	  <div class="form-group">
+	  <div class="form-group" id="passwordForm">
 	    <label class="sr-only" for="nameInput">密码</label>
 	    <div class="col-sm-6 col-sm-offset-3">
 	      <input type="password" class="form-control m_input" name='modal-input' id="keywordInput" placeholder="密码">
@@ -191,12 +189,12 @@
 	  <p id="ps">...</p>
 	</div>
 	<!--按键-->
-        <div class="col-sm-6 col-sm-offset-3">
-	  <div class="col-sm-6">
+        <div class="col-xs-6 col-xs-offset-3">
+	  <div class="col-xs-6">
             <button type="button" class="btn btn-default" data-dismiss="modal" id="cancelBtn">取消</button>
 	  </div>
-	  <div class="col-sm-6">
-  	    <button type="button" class="btn btn-primary col-sm-6" id="regAndloginBtn">注册</button>
+	  <div class="col-xs-6">
+  	    <button type="button" class="btn btn-primary" id="regAndloginBtn">注册</button>
 	  </div>
 	</div>
       </div>
@@ -204,6 +202,51 @@
   </div><!--div class="modal-dialog"-->
 </div><!--按键弹窗-->
 
+<!--修改密码框-->
+<div class="modal fade" id="updatePWModal" tabindex="-1" role="dialog" data-backdrop="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">
+	  <span aria-hidden="true">&times;</span>
+	</button>
+	<h3 class="modal-title text-center" id='updatePWTitle'>修改密码</h3>
+	<p class="text-center" style='color: red;' id="pw-warn-text"></p>
+      </div><!--div class="modal-header"-->
+
+      <div class="modal-body m_modal-body">
+      	 <form class="form-horizontal" id="modal-form">   
+	   <!--当前密码框-->
+	   <div class="form-group">
+	     <label class="sr-only" for="prePasswordInput">当前密码</label>
+	     <div class="col-sm-6 col-sm-offset-3">
+	       <input type="password" class="form-control m_input" id="prePasswordInput" placeholder="当前密码">
+	     </div>
+	   </div><!--当前密码框-->
+	   <!--新密码框-->
+	   <div class="form-group">
+	     <label class="sr-only" for="newPasswordInput">新密码</label>
+	     <div class="col-sm-6 col-sm-offset-3">
+	       <input type="password" class="form-control m_input" id="newPasswordInput" placeholder="新密码">
+	     </div>
+	   </div><!--新密码框-->
+	 </form>
+      </div><!--div class="modal-body"-->
+      <div class="modal-footer">
+	<!--按键-->
+        <div class="col-xs-6 col-xs-offset-3">
+	  <div class="col-xs-6">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+	  </div>
+	  <div class="col-xs-6">
+  	    <button type="button" class="btn btn-primary" id="updatePWBtn">保存</button>
+	  </div>
+	</div>
+      </div>
+    </div><!--div class="modal-content"-->
+  </div><!--div class="modal-dialog"-->
+</div><!--修改密码框-->
+ 
   <!--主体-->
 <div >
 <!--包含背景图片的div-->

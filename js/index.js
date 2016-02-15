@@ -247,7 +247,7 @@ $(function(){
 			$('#registerExplain').addClass('sr-only');
 			this.setLoginBtn();
 		},
-		//将注册数据发送到后台
+		//将登录数据发送到后台
 		postLoginData: function(data, response){
 			$('#warn-text').text('');
 			var name=$('#nameInput').val();
@@ -268,9 +268,12 @@ $(function(){
 				password: password
 			},
 			function(data, status){
+				//登录成功
+				if(success)
+					user.userInit();
 			});
 		},
-		//设置注册按键与后台的交流
+		//设置登录按键与后台的交流
 		setLoginBtn: function(){
 			var loginBtn = $('#regAndloginBtn');
 			loginBtn.on('click', login.postLoginData);
@@ -281,7 +284,57 @@ $(function(){
 			$('#right-navbar-logout').addClass('sr-only');
 			$('#right-navbar-login').removeClass('sr-only');
 		},
+	};
 
+	var user = {
+		userInit: function(){
+			clearModal();
+			regist.registInit();
+			$('#modal-title').text('用户信息');
+			$('#regAndloginBtn').text('保存修改');
+			$('#hide_login').removeClass('sr-only');
+			$('.help-block').addClass('sr-only');
+			$('#registerExplain').addClass('sr-only');
+			$('#passwordForm').addClass('sr-only');
+			this.setUserName('weiqi');
+			this.setPWModal();
+		},
+
+		//设置用户名
+		setUserName: function(name){
+			$('#userLabel').text(name);
+		},
+
+		//用户不合法输入处理
+		illegalHandle: function(warnText){
+			var titleOffset = $('#updatePWTitle').offset();
+			$('.modal').animate({
+				scrollTop: titleOffset.top},500);
+			$('#pw-warn-text').text(warnText);
+		},
+
+		//修改密码
+		updatePW: function(){
+			$('#pw-warn-text').text('');
+			var prePW = $('#prePasswordInput').val();
+			var newPW = $('#newPasswordInput').val();
+			if(!prePW || !newPW)
+				user.illegalHandle('密码不能为空! ');
+			$.post("index.php",
+			{
+				operaton: 'updatePW',
+				prePassword: prePW,
+				newPassword: newPW
+			},
+			function(data, status){
+			});
+		},
+
+		//设置密码框
+		setPWModal: function(){
+			$('#updatePWBtn').on('click', user.updatePW);
+				
+		},
 	};
 
 	$('#registBtn').on('click',function(){
@@ -291,6 +344,8 @@ $(function(){
 	$('#loginBtn').on('click', function(){
 		login.loginInit();
 	});
+
+	user.userInit();
 });
 
 
