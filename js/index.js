@@ -1,5 +1,40 @@
 //事件处理函数
 $(function(){
+
+	//根据页面中的参数对页面进行调整
+	var pageDisplay = {
+		init: function(){
+			var href = window.location.href;
+			var withUserReg = /weiqi\/\?(.*)/;
+			var userPara = withUserReg.exec(href);
+			//处于有用户登录的界面
+			if(userPara.length == 2){
+				pageDisplay.loginDisplay();
+				return;
+			}
+			var withSearchReg = /search\/\?(.*)/;
+			var searchPara = withUserReg.exec(href);
+			if(searchPara.length == 2){
+				pageDisplay.searchDisplay();
+			}
+		}
+		//用户已经登录
+		loginDisplay: function(){
+			$('#signupModal').modal('hide');
+			$('#navbar-right-logout').addClass('sr-only');
+			$('#navbar-right-login').removeClass('sr-only');
+			$('#modal-title').text('用户信息');
+			$('#regAndloginBtn').text('保存修改');
+			$('#hide_login').removeClass('sr-only');
+			$('.help-block').addClass('sr-only');
+			$('#registerExplain').addClass('sr-only');
+			$('#passwordForm').addClass('sr-only');
+
+		},
+
+
+	};
+
 	//将modal中所有输入框和记录清空
 	function clearModal(){
 		$.each($('#modal-form').find('input'), function(index, inputBox){
@@ -261,6 +296,8 @@ $(function(){
 				regist.illegalHandle('密码不能为空！');
 				return;
 			}
+			login.loginSuccess();
+			/*
 			//发送数据到服务端
 			$.post("index.php",
 			{
@@ -274,6 +311,7 @@ $(function(){
 				if(success)
 					user.userInit(userData);
 			});
+			*/
 		},
 		//设置登录按键与后台的交流
 		setLoginBtn: function(){
@@ -284,22 +322,21 @@ $(function(){
 
 		//登录成功后的处理
 		loginSuccess: function(){
-			$('#right-navbar-logout').addClass('sr-only');
-			$('#right-navbar-login').removeClass('sr-only');
+			window.location.href='/weiqi?name=weiqi&uid=10';
+			//var userData = {'name': 'weiqi'};
+			//user.userInit(userData);
 		},
 	};
 
 	var user = {
-		userInit: function(userData){
+		//用户数据
+		userData:{
+		},
+		userInit: function(user){
+			this.userData = user;
 			clearModal();
 			regist.registInit();
-			$('#modal-title').text('用户信息');
-			$('#regAndloginBtn').text('保存修改');
-			$('#hide_login').removeClass('sr-only');
-			$('.help-block').addClass('sr-only');
-			$('#registerExplain').addClass('sr-only');
-			$('#passwordForm').addClass('sr-only');
-			this.setUserName(userData.name);
+			this.setUserName(this.userData.name);
 			this.setMenuBtn();
 		},
 
@@ -326,6 +363,8 @@ $(function(){
 			$.post("index.php",
 			{
 				operaton: 'updatePW',
+				name: user.userData.name,
+				userId: user.userData.id,
 				prePassword: prePW,
 				newPassword: newPW
 			},
@@ -340,17 +379,17 @@ $(function(){
 		},
 
 		//设置用户信息
-		setUserData: function(userData){
-			$('#nameInput').val(userData.name);
-			var telNumbers = userData.telNumbers;
+		setUserData: function(){
+			$('#nameInput').val(user.userData.name);
+			var telNumbers = user.userData.telNumbers;
 			for( tel in telNumbers){
 				$('#telInput').val(tel);
 				$('#addTelBtn').click();
 			}
-			$('#mailInput').val(userData.email);
-			$('#eduInput').val(userData.education);
-			$('#dateInput').children('input').val(userData.eduDate);
-			$('#addrInput').val(userData.address);
+			$('#mailInput').val(user.userData.email);
+			$('#eduInput').val(user.userData.education);
+			$('#dateInput').children('input').val(user.userData.eduDate);
+			$('#addrInput').val(user.userData.address);
 		},
 
 		//保存用户修改信息
@@ -373,7 +412,7 @@ $(function(){
 			$.post("index.php",
 			{
 				operaton: 'updateUserData',
-				userId: userData.id,
+				userId: user.userData.id,
 				name: name,
 				email: email,
 				telphone: telNumbers,
@@ -392,6 +431,27 @@ $(function(){
 			$('#regAndloginBtn').on('click', user.updateUserData);
 		},
 
+		//退出登录
+		logout: function(){
+			location.href='/weiqi/';
+			user.setUserName('');
+			user.userData={};
+
+			$.post('index.php',{
+				operation: 'logout',
+				name: user.userData.name,
+				userId: user.userData.id
+			},
+			function(data, status){
+				if(status == success){
+					$('#passwordForm').removeClass('sr-only');
+					$('#navbar-right-login').addClass('sr-only');
+					$('#navbar-right-logout').removeClass('sr-only');
+					user.setUserName('');
+				}
+			});
+		},
+
 		setMenuBtn: function(){
 			$('#pw_li').on('click', function(){
 				$('#pw-warn-text').text('');
@@ -402,15 +462,14 @@ $(function(){
 				user.setUpdateBtn();
 			});
 			$('#logoutBtn').on('click', function(){
-				$('#passwordForm').removeClass('sr-only');
-				$('#navbar-right-login').addClass('sr-only');
-				$('#navbar-right-logout').removeClass('sr-only');
-				user.setUserName('');
+				user.logout();
 			});
 		}
 	};
 	var pictureWall = {
 		pictureWallInit: function(){
+			if(!$('#picture-wall').length)
+				return;
 			this.addLgPicture('picture (1).jpg');
 			this.addLgPicture('picture (2).jpg');
 			this.addSmPicture('picture (3).jpg');
@@ -447,6 +506,28 @@ $(function(){
 		},
 	};
 
+	var search = {
+		init: function(){
+			this.setSearchBtn();
+		},
+
+		setSearchBtn: function(){
+			$('#searchBtn').on('click', search.searchOpt);
+		},
+
+		//搜索操作
+		searchOpt: function(){
+			if(!user)
+				return;
+			var searchKW = $('#search_input').val();
+			if(!searchKW)
+				return;
+			window.location.href='/weiqi/search?name='+user.userData.name+
+				'&uid='+user.userData.id+'&search='+searchKW;
+		},
+	};
+
+	pageDisplay.init();
 	$('#registBtn').on('click',function(){
 		regist.registInit();
 	});
@@ -454,9 +535,7 @@ $(function(){
 	$('#loginBtn').on('click', function(){
 		login.loginInit();
 	});
-
-	var userData = {'name': 'weiqi'};
-	user.userInit(userData);
+	search.init();
 	pictureWall.pictureWallInit();
 });
 

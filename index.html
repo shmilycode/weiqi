@@ -33,13 +33,13 @@
 
     <!--右边选项-->
     <div class="collapse navbar-collapse" id="navbar-right">
-      <!--注销时的选项-->
-      <ul class="nav navbar-nav navbar-right sr-only" id="navbar-right-logout">
+     <!--注销时的选项-->
+      <ul class="nav navbar-nav navbar-right" id="navbar-right-logout">
         <li><button class="btn btn-link m_navbar-btn" role="button" data-toggle="modal" data-target="#signupModal" id="loginBtn">登录</button></li>
         <li><button class="btn btn-primary m_navbar-btn active" role="button" data-toggle="modal" data-target="#signupModal" id="registBtn">注册</button></li>
       </ul>
-      <!--登录后的选项-->
-      <ul class="nav navbar-nav navbar-right" id="navbar-right-login">
+     <!--登录后的选项-->
+      <ul class="nav navbar-nav navbar-right sr-only" id="navbar-right-login">
         <li>
 	  <div class="btn-group">
 	    <button type="button" class="btn btn-link dropdown-toggle m_navbar-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -259,9 +259,9 @@
 	  <!--输入框-->
 	  <div class="form-group row">
 	    <center><div class="input-group col-xs-10 col-sm-4">
-  	      <input type="text" placeholder="friends" class="form-control m_search-input">
+  	      <input type="text" placeholder="friends" class="form-control m_search-input" id='search_input'>
 	      <span class="input-group-btn m_input">
-	        <button class="btn btn-default" type="button" style="border-color: #fff;">
+	        <button class="btn btn-default" type="button" style="border-color: #fff;" id="searchBtn">
 		  <span class="glyphicon glyphicon-search"></span>
 		</button>
               </span>
