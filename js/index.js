@@ -8,16 +8,32 @@ $(function(){
 			var withUserReg = /weiqi\/\?(.*)/;
 			var userPara = withUserReg.exec(href);
 			//处于有用户登录的界面
-			if(userPara.length == 2){
+			if(userPara && userPara.length >= 2){
 				pageDisplay.loginDisplay();
+
+				//获取用户参数
+				var nameReg = /name=(.*)?&/;
+				var name = nameReg.exec(userPara[1]);
+				var uidReg = /uid=(.*)$/;
+				var uid = uidReg.exec(userPara[1]);
+				user.init(name[1], uid[1]);
 				return;
 			}
 			var withSearchReg = /search\/\?(.*)/;
-			var searchPara = withUserReg.exec(href);
-			if(searchPara.length == 2){
+			var searchPara = withSearchReg.exec(href);
+			if(searchPara && searchPara.length == 2){
+				//获取用户参数
+				var nameReg = /name=(.*)?&/;
+				var name = nameReg.exec(searchPara[1]);
+				var uidReg = /uid=(.*)&/;
+				var uid = uidReg.exec(searchPara[1]);
+				var keywordReg = /search=(.*)$/;
+				var keyword = keywordReg.exec(searchPara[1]);
+				user.init(name[1], uid[1]);
+				pageDisplay.loginDisplay();
 				pageDisplay.searchDisplay();
 			}
-		}
+		},
 		//用户已经登录
 		loginDisplay: function(){
 			$('#signupModal').modal('hide');
@@ -29,8 +45,11 @@ $(function(){
 			$('.help-block').addClass('sr-only');
 			$('#registerExplain').addClass('sr-only');
 			$('#passwordForm').addClass('sr-only');
-
 		},
+
+		//搜索页面显示
+		searchDisplay: function(){
+		}
 
 
 	};
@@ -254,7 +273,7 @@ $(function(){
 			regBtn.on('click', regist.postRegistData);
 		},
 		//初始化注册框
-		registInit: function(){
+		init: function(){
 			clearModal();
 			//清空缓存的号码
 			$('#modal-title').text('注册');
@@ -274,7 +293,7 @@ $(function(){
   	};
 
 	var login = {
-		loginInit: function(){
+		init: function(){
 			clearModal();
 			$('#modal-title').text('登录');
 			$('#regAndloginBtn').text('登录');
@@ -309,7 +328,7 @@ $(function(){
 				//登录成功
 				var userData = {'name': 'weiqi'};
 				if(success)
-					user.userInit(userData);
+					user.init(userData);
 			});
 			*/
 		},
@@ -324,7 +343,7 @@ $(function(){
 		loginSuccess: function(){
 			window.location.href='/weiqi?name=weiqi&uid=10';
 			//var userData = {'name': 'weiqi'};
-			//user.userInit(userData);
+			//user.init(userData);
 		},
 	};
 
@@ -332,12 +351,25 @@ $(function(){
 		//用户数据
 		userData:{
 		},
-		userInit: function(user){
-			this.userData = user;
+		init: function(name, uid){
+			this.getUserData(name, uid);
 			clearModal();
-			regist.registInit();
 			this.setUserName(this.userData.name);
 			this.setMenuBtn();
+		},
+
+		//向服务器请求用户信息
+		getUserData: function(name, uid){
+			this.userData = {name: 'weiqi'};
+			$.post('index.php',{
+				operation: 'userdata',
+				name: name,
+				uid: uid
+			},
+			function(data,status){
+				//获取到的数据赋值给userData
+				userData = {name: weiqi};
+			});
 		},
 
 		//设置用户名
@@ -467,7 +499,7 @@ $(function(){
 		}
 	};
 	var pictureWall = {
-		pictureWallInit: function(){
+		init: function(){
 			if(!$('#picture-wall').length)
 				return;
 			this.addLgPicture('picture (1).jpg');
@@ -517,26 +549,73 @@ $(function(){
 
 		//搜索操作
 		searchOpt: function(){
-			if(!user)
+			if(!user.userData.name){
+				//如果还没登录，则显示登录框
+				$('#loginBtn').click();
 				return;
+			}
 			var searchKW = $('#search_input').val();
 			if(!searchKW)
 				return;
 			window.location.href='/weiqi/search?name='+user.userData.name+
 				'&uid='+user.userData.id+'&search='+searchKW;
 		},
+
+		//向服务器搜索
+		searchServer: function(uid, keyword){
+			$('#result_mes').text('正在搜索中...');
+			$.post('index.php',
+			{
+				operation: 'search',
+				uid:	uid,
+				keyword: keyword
+			},
+			function(data, status){
+				search.showSearchResult(keyword,res);
+			});
+		},
+
+		//设置显示搜索结果
+		showSearchResult: function(keyword, res){
+			if(res.count == 0){
+				$('#result_mes').text('找不到您的朋友 '+keyword);
+				return;
+			}
+			$('#result_mes').text('共找到 '+res.count+' 个结果');
+			var panel = $('<div></div>').addClass('panel panel-primary');
+			var panel_head = $('<div></div>').addClass('panel-heading').append($('<h3></h3>').addClass('panel-title'));
+			var panel_body = $('<div></div>').addClass('panel-body');
+			var panel_footer = $('<div></div>').addClass('panel-footer');
+			var result = res.result;
+			for(var i=0; i < res; i++){
+				var friend = result[i];
+				panel_head.children('h3').text(friend.name);
+				var telNumbers = friend.telphone;
+				for(var tel in telNumbers){
+					panel_body.append($('<p></p>').text('电话：'+tel));
+				}
+				panel_body.append($('<p></p>').text('街道：' + friend.address));
+				panel_body.append($('<p></p>').text(friend.education + '：' +
+					friend.eduDate));
+				panel_footer.text('最后修改时间：'+friend.lastChange);
+
+				panel.append(panel_head).append(panel_body).append(panel_footer);
+				$('#result_list').append(panel);
+			}
+		}
 	};
 
+	regist.init();
 	pageDisplay.init();
+	search.init();
+	pictureWall.init();
 	$('#registBtn').on('click',function(){
-		regist.registInit();
+		regist.init();
 	});
 
 	$('#loginBtn').on('click', function(){
-		login.loginInit();
+		login.init();
 	});
-	search.init();
-	pictureWall.pictureWallInit();
 });
 
 
