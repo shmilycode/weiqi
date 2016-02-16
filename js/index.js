@@ -217,7 +217,7 @@ $(function(){
 				regist.illegalHandle('姓名不能为空！');
 				return;
 			}
-			var password = $('keywordInput').val();
+			var password = $('#keywordInput').val();
 			if(!password){
 				regist.illegalHandle('密码不能为空！');
 				return;
@@ -252,9 +252,9 @@ $(function(){
 			}
 
 			//发送数据到服务端
-			$.post("index.php",
-			{
-				operaton: 'regist',
+			$.post("php/index.php",
+			{ 
+				operation: 'regist',
 				name: name,
 				password: password,
 				email: email,
@@ -264,6 +264,8 @@ $(function(){
 				address: address
 			},
 			function(data, status){
+				console.debug(data);
+				console.debug(status);
 			});
 		},
 		//设置注册按键与后台的交流
@@ -318,7 +320,7 @@ $(function(){
 			login.loginSuccess();
 			/*
 			//发送数据到服务端
-			$.post("index.php",
+			$.post("php/index.php",
 			{
 				operaton: 'login',
 				name: name,
@@ -361,7 +363,7 @@ $(function(){
 		//向服务器请求用户信息
 		getUserData: function(name, uid){
 			this.userData = {name: 'weiqi'};
-			$.post('index.php',{
+			$.post('php/index.php',{
 				operation: 'userdata',
 				name: name,
 				uid: uid
@@ -392,7 +394,7 @@ $(function(){
 			var newPW = $('#newPasswordInput').val();
 			if(!prePW || !newPW)
 				user.illegalHandle('密码不能为空! ');
-			$.post("index.php",
+			$.post("php/index.php",
 			{
 				operaton: 'updatePW',
 				name: user.userData.name,
@@ -441,7 +443,7 @@ $(function(){
 			var address = $('#addrInput').val();
 
 			//发送数据到服务端
-			$.post("index.php",
+			$.post("php/index.php",
 			{
 				operaton: 'updateUserData',
 				userId: user.userData.id,
@@ -469,7 +471,7 @@ $(function(){
 			user.setUserName('');
 			user.userData={};
 
-			$.post('index.php',{
+			$.post('php/index.php',{
 				operation: 'logout',
 				name: user.userData.name,
 				userId: user.userData.id
@@ -564,7 +566,7 @@ $(function(){
 		//向服务器搜索
 		searchServer: function(uid, keyword){
 			$('#result_mes').text('正在搜索中...');
-			$.post('index.php',
+			$.post('php/index.php',
 			{
 				operation: 'search',
 				uid:	uid,
