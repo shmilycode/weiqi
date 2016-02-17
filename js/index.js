@@ -301,10 +301,10 @@ $(function(){
 			var regBtn = $('#regAndloginBtn');
 			regBtn.unbind();
 			regBtn.on('click', regist.postRegistData);
+			$('#signupModal').on('hidden.bs.modal', clearModal);
 		},
 		//初始化注册框
 		init: function(){
-			clearModal();
 			//清空缓存的号码
 			$('#modal-title').text('注册');
 			$('#regAndloginBtn').text('注册');
@@ -364,7 +364,7 @@ $(function(){
 					case 'non-existent':
 						login.illegalHandle('用户不存在');
 						break;
-					case 'faild':
+					case 'failed':
 						login.illegalHandle('密码错误');
 						break;
 					case 'success':
@@ -392,7 +392,7 @@ $(function(){
 		//登录成功后的处理
 		loginSuccess: function(data){
 			window.location.href='/weiqi?name=' + 
-				data.name + '&uid=' + data.uid;
+				data.name + '&uid=' + data.userId;
 		},
 	};
 
@@ -403,21 +403,27 @@ $(function(){
 		init: function(name, uid){
 			this.getUserData(name, uid);
 			clearModal();
-			this.setUserName(this.userData.name);
 			this.setMenuBtn();
 		},
 
 		//向服务器请求用户信息
 		getUserData: function(name, uid){
-			this.userData = {name: 'weiqi'};
 			$.post('php/index.php',{
 				operation: 'userdata',
 				name: name,
-				uid: uid
+				userId: uid
 			},
 			function(data,status){
 				//获取到的数据赋值给userData
-				userData = {name: weiqi};
+				if(status == 'success'){
+					data = JSON.parse(data);
+					user.userData = data;
+					user.setUserName(user.userData.name);
+				}else{
+					pageDisplay.mentionPage('获取用户数据失败');
+				}
+			}).error(function(){
+				pageDisplay.mentionPage('服务器发生错误');
 			});
 		},
 
@@ -439,17 +445,41 @@ $(function(){
 			$('#pw-warn-text').text('');
 			var prePW = $('#prePasswordInput').val();
 			var newPW = $('#newPasswordInput').val();
-			if(!prePW || !newPW)
+			if(!prePW || !newPW){
 				user.illegalHandle('密码不能为空! ');
+				return;
+			}
+			$('#updatePWBtn').button('loading');
 			$.post("php/index.php",
 			{
 				operation: 'updatePW',
-				name: user.userData.name,
-				userId: user.userData.id,
+				userId: user.userData.userId,
 				prePassword: prePW,
 				newPassword: newPW
 			},
 			function(data, status){
+				if(status == 'success'){
+					data = JSON.parse(data);	
+					switch(data.status){
+					case 'success':
+						$('#updatePWModal').modal('hide');
+						pageDisplay.mentionPage('修改密码成功！');
+						break;
+					case 'failed':
+						user.illegalHandle('当前密码错误');
+						break;
+					case 'error':
+						user.illegalHandle('服务器修改密码失败！');
+						break;
+					default: break;
+					};
+				}
+				else{
+					user.illegalHandle('服务器修改密码失败！');
+				}
+				$('#updatePWBtn').button('reset');
+			}).error(function(){
+				$('#updatePWBtn').button('reset');
 			});
 		},
 
@@ -461,10 +491,11 @@ $(function(){
 
 		//设置用户信息
 		setUserData: function(){
+			user.setUpdateBtn();
 			$('#nameInput').val(user.userData.name);
-			var telNumbers = user.userData.telNumbers;
-			for( tel in telNumbers){
-				$('#telInput').val(tel);
+			var phoneNumbers = user.userData.phoneNumber;
+			for(var i=0; i < phoneNumbers.length; i++){
+				$('#telInput').val(phoneNumbers[i]);
 				$('#addTelBtn').click();
 			}
 			$('#mailInput').val(user.userData.email);
@@ -477,18 +508,25 @@ $(function(){
 		updateUserData: function(){
 			$('warn-text').text('');
 			var name=$('#nameInput').val();
+			name = name ? name : user.userData.name;
 			var email = $('#mailInput').val();
+			email = email ? email : user.userData.email;
 			$('#addTelBtn').click();
-			var telGroup = $('#telListGroup').find('input');
-			var telNumbers = new Array();
-			$.each(telGroup, function(index, telInput){
+			var phoneGroup = $('#telListGroup').find('input');
+			var phoneNumbers = new Array();
+			$.each(phoneGroup, function(index, telInput){
 				if(telInput.value)
-					telNumbers.push(telInput.value);
+					phoneNumbers.push(telInput.value);
 			});
+			phoneNumbers = phoneNumbers ? phoneNumbers :
+					user.userData.phoneNumbers;
 			var education = $('#eduInput').val();
+			education = education ? education : 
+					user.userData.education;
 			var eduDate = $('#dateInput input').val();
+			eduDate = eduDate ? eduDate : user.userData.eduDate;
 			var address = $('#addrInput').val();
-
+			address = address ? address : user.userData.address;
 			//发送数据到服务端
 			$.post("php/index.php",
 			{
@@ -496,7 +534,7 @@ $(function(){
 				userId: user.userData.id,
 				name: name,
 				email: email,
-				telphone: telNumbers,
+				phoneNumber: phoneNumbers,
 				education: education,
 				eduDate: eduDate,
 				address: address
@@ -540,7 +578,7 @@ $(function(){
 			});
 			$('#ud_li').on('click', function(){
 				$('#warn-text').text('');
-				user.setUpdateBtn();
+				user.setUserData();
 			});
 			$('#logoutBtn').on('click', function(){
 				user.logout();
@@ -607,7 +645,7 @@ $(function(){
 			if(!searchKW)
 				return;
 			window.location.href='/weiqi/search?name='+user.userData.name+
-				'&uid='+user.userData.id+'&search='+searchKW;
+				'&uid='+user.userData.userId+'&search='+searchKW;
 		},
 
 		//向服务器搜索
@@ -616,7 +654,7 @@ $(function(){
 			$.post('php/index.php',
 			{
 				operation: 'search',
-				uid:	uid,
+				userId:	uid,
 				keyword: keyword
 			},
 			function(data, status){
@@ -639,7 +677,7 @@ $(function(){
 			for(var i=0; i < res; i++){
 				var friend = result[i];
 				panel_head.children('h3').text(friend.name);
-				var telNumbers = friend.telphone;
+				var telNumbers = friend.phoneNumber;
 				for(var tel in telNumbers){
 					panel_body.append($('<p></p>').text('电话：'+tel));
 				}
