@@ -41,6 +41,7 @@ $(function(){
 			$('#navbar-right-login').removeClass('sr-only');
 			$('#modal-title').text('用户信息');
 			$('#regAndloginBtn').text('保存修改');
+			$('#regAndloginBtn').attr('data-loading-text', '保存中..');
 			$('#hide_login').removeClass('sr-only');
 			$('.help-block').addClass('sr-only');
 			$('#registerExplain').addClass('sr-only');
@@ -49,9 +50,16 @@ $(function(){
 
 		//搜索页面显示
 		searchDisplay: function(){
+		},
+
+		//提示页面
+		mentionPage: function(mention){
+			var modal_body = $('<div></div>').addClass('modal-body').append($('<h4></h4>').text(mention));
+			var modal_content = $('<div></div>').addClass('modal-content').append(modal_body);
+			var modal_dialog = $('<div></div>').addClass('modal-dialog modal-sm').append(modal_content);
+			var mention_modal = $('<div></div>').addClass('modal fade').attr({'tabindex': '-1', 'role': 'dialog', 'aria-labelledby':'mention'}).append(modal_dialog).css('top', '20%');
+			mention_modal.modal('toggle');
 		}
-
-
 	};
 
 	//将modal中所有输入框和记录清空
@@ -223,6 +231,10 @@ $(function(){
 				return;
 			}
 			var email = $('#mailInput').val();
+			if(!email){
+				regist.illegalHandle('邮箱不能为空！');
+				return;
+			}
 
 			$('#addTelBtn').click();
 			var telGroup = $('#telListGroup').find('input');
@@ -251,6 +263,7 @@ $(function(){
 				return;
 			}
 
+			$('#regAndloginBtn').button('loading');
 			//发送数据到服务端
 			$.post("php/index.php",
 			{ 
@@ -258,14 +271,29 @@ $(function(){
 				name: name,
 				password: password,
 				email: email,
-				telphone: telNumbers,
+				phoneNumber: telNumbers,
 				education: education,
 				eduDate: eduDate,
 				address: address
 			},
 			function(data, status){
-				console.debug(data);
-				console.debug(status);
+				if(status == 'success'){
+					data = JSON.parse(data);
+					var registStatus = data['status'];
+					switch(registStatus){
+					case 'success':
+						$('#signupModal').modal('hide');
+						pageDisplay.mentionPage('注册成功！');	
+
+					case 'failed': 
+					};
+				}else{
+					regist.illegalHandle('因服务器问题，注册失败！');
+				}
+				$('#regAndloginBtn').button('reset');
+			}).error(function(){
+				pageDisplay.mentionPage('服务器发生错误！');
+				$('#regAndloginBtn').button('reset');
 			});
 		},
 		//设置注册按键与后台的交流
@@ -280,6 +308,7 @@ $(function(){
 			//清空缓存的号码
 			$('#modal-title').text('注册');
 			$('#regAndloginBtn').text('注册');
+			$('#regAndloginBtn').attr('data-loading-text', '注册中..');
 			$('#hide_login').removeClass('sr-only');
 			$('.help-block').removeClass('sr-only');
 			$('#registerExplain').removeClass('sr-only');
@@ -296,56 +325,74 @@ $(function(){
 
 	var login = {
 		init: function(){
-			clearModal();
-			$('#modal-title').text('登录');
-			$('#regAndloginBtn').text('登录');
-			$('#hide_login').addClass('sr-only');
-			$('.help-block').addClass('sr-only');
-			$('#registerExplain').addClass('sr-only');
 			this.setLoginBtn();
 		},
+
+		//错误输入处理
+		illegalHandle: function(warnText){
+			var titleOffset = $('#loginTitle').offset();
+			$('#loginModal').animate({
+				scrollTop: titleOffset.top},500);
+			$('#login-warn-text').text(warnText);
+		},
+
 		//将登录数据发送到后台
 		postLoginData: function(data, response){
-			$('#warn-text').text('');
-			var name=$('#nameInput').val();
-			if(!name){
-				regist.illegalHandle('姓名不能为空！');
+			$('#login-warn-text').text('');
+			var email=$('#loginEmailInput').val();
+			if(!email){
+				login.illegalHandle('邮箱不能为空！');
 				return;
 			}
-			var password = $('#keywordInput').val();
+			var password = $('#loginPasswordInput').val();
 			if(!password){
-				regist.illegalHandle('密码不能为空！');
+				login.illegalHandle('密码不能为空！');
 				return;
 			}
-			login.loginSuccess();
-			/*
 			//发送数据到服务端
+			$('#loginSubmitBtn').button('loading');
 			$.post("php/index.php",
 			{
-				operaton: 'login',
-				name: name,
+				operation: 'login',
+				email: email,
 				password: password
 			},
 			function(data, status){
-				//登录成功
-				var userData = {'name': 'weiqi'};
-				if(success)
-					user.init(userData);
+				if(status == 'success'){
+					data = JSON.parse(data);
+					switch(data.status){
+					case 'non-existent':
+						login.illegalHandle('用户不存在');
+						break;
+					case 'faild':
+						login.illegalHandle('密码错误');
+						break;
+					case 'success':
+						login.loginSuccess(data);	
+						break;
+					case 'error':
+						login.illegalHandle('服务器错误');
+						break;
+					default: break;
+					}
+					$('#loginSubmitBtn').button('reset');
+				}
+			}).error(function(){
+				$('#loginModal').modal('hide');
+				pageDisplay.mentionPage('服务器发生错误！');
+				$('#loginSubmitBtn').button('reset');
 			});
-			*/
 		},
 		//设置登录按键与后台的交流
 		setLoginBtn: function(){
-			var loginBtn = $('#regAndloginBtn');
-			loginBtn.unbind();
+			var loginBtn = $('#loginSubmitBtn');
 			loginBtn.on('click', login.postLoginData);
 		},
 
 		//登录成功后的处理
-		loginSuccess: function(){
-			window.location.href='/weiqi?name=weiqi&uid=10';
-			//var userData = {'name': 'weiqi'};
-			//user.init(userData);
+		loginSuccess: function(data){
+			window.location.href='/weiqi?name=' + 
+				data.name + '&uid=' + data.uid;
 		},
 	};
 
@@ -396,7 +443,7 @@ $(function(){
 				user.illegalHandle('密码不能为空! ');
 			$.post("php/index.php",
 			{
-				operaton: 'updatePW',
+				operation: 'updatePW',
 				name: user.userData.name,
 				userId: user.userData.id,
 				prePassword: prePW,
@@ -445,7 +492,7 @@ $(function(){
 			//发送数据到服务端
 			$.post("php/index.php",
 			{
-				operaton: 'updateUserData',
+				operation: 'updateUserData',
 				userId: user.userData.id,
 				name: name,
 				email: email,

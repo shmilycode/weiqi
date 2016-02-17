@@ -1,6 +1,7 @@
 <?php
 header("Content-type: text/txt; charset=utf-8");
 //数据库的信息
+$key = 666666;
 $servername = "120.27.110.28";
 $username = "root";
 $password = "chenweiqi";
@@ -56,8 +57,70 @@ function handleMessage($msg){
 
 //处理插入事件
 function handleRegist($data){
-	
+	$name = $data['name'];
+	$password = $data['password'] ^ key;
+	$email = $data['email'];
+	//将数组转化为字符串,用空格分隔
+	$phoneNumber = implode(' ', $data['phoneNumber']);
+	$education = $data['education'];
+	$eduDate = $data['eduDate'];
+	$address = $data['address'];
+	$result = insert($name, $password, $email, $phoneNumber,
+		$education, $eduDate, $address);
+	//注册成功
+	if(!$result){
+		$Response['status'] = 'success';
+		$Response['message'] = '数据库插入成功';
+	}else{
+		$Response['status'] = 'faild';
+		$Response['message'] = $result;
+	}
 	return $Response;
+}
+
+//处理登录验证
+function handleLogin($data){
+	$account = $data['email'];
+	$password = $data['password'] ^ key;
+	$result = queryAccount($account);
+
+	$pw = 0;
+	$uid = 0;
+	$name = 0;
+	while($row = mysql_fetch_array($result)){
+		$uid = $row['uid'];
+		$pw = $row['password'];
+		$name = $row['name'];
+	}
+	//用户不存在
+	if(!$uid){
+		$Response['status'] = 'non-existent';
+		$Response['message'] = '用户名不存在! ';
+		return $Response;
+	}
+
+	//密码不正确
+	if($password != $pw){
+		$Response['status'] = 'faild';
+		$Response['message'] = '密码错误！';
+		return $Response;
+	}
+
+	$res = loginUpdate($uid);
+	if(!$res){
+		$Response['status'] = 'success';
+		$Response['message'] = '登录成功！';
+		$Response['name'] = $name;
+		$Response['uid'] = $uid;
+	}else{
+		$Response['status'] = 'error';
+		$Response['message'] = $res;
+	}
+	return $Response;
+}
+
+//获取用户信息
+function handleUserData($data){
 }
 
 //处理查找事件
@@ -105,13 +168,13 @@ function createTB($TBname, $con){
 	$createStr = "create table user_data
 			(uid bigint NOT NULL AUTO_INCREMENT,
 			PRIMARY KEY(uid),
-			name text,
+			name text  character set utf8 collate utf8_general_ci,
 			password text,
 			phoneNumber text,
 			email text,
-			education text,
+			education text character set utf8 collate utf8_general_ci,
 			eduDate text,
-			address text,
+			address text character set utf8 collate utf8_general_ci,
 			status int,
 			loginIp text,
 			registDate datetime,
@@ -128,41 +191,46 @@ function createTB($TBname, $con){
 }
 
 //插入数据
-function insert($name, $phoneNumber, $email, $education, $eduDate, $address){
+function insert($name, $password, $email, $phoneNumber, $education, $eduDate, $address){
 	$userIp = getUserIp();
 	$curDate = date("Y-m-d H:i:s", strtotime("now"));
-	$insertStr = "insert into user_data (name, phoneNumber, email,
-			education, eduDate, address, status, registDate,
-			modifiedDate, operateDate) 
-			values ('$name', $phoneNumber, '$email', '$education', 
-			'$eduDate', '$address', 0, '$curDate', '$curDate', '$curDate')";
+	$insertStr = "insert into user_data (name, password, phoneNumber,
+			email, education, eduDate, address, status, loginIp,
+			registDate, modifiedDate, operateDate) 
+			values ('$name', '$password', '$phoneNumber', 
+			'$email', '$education', '$eduDate', '$address', 
+			0, '$userIp', '$curDate', '$curDate', '$curDate')";
 	
 	if (!mysql_query($insertStr)){
-		return "插入数据失败: " .mysql_error();
+		return mysql_error();
 	}else{
-		return "插入数据成功！";
+		return 0;
 	}
 }
 
-//根据url和spm查找
-function queryUrlAndSpm($url, $spm){
-	$queryStr = "";
-	if(!$url && $spm){
-		$queryStr = "select * from user_data where spm = \"";
-		$queryStr .= $spm .'"';
+//用户登录，修改数据库
+function loginUpdate($uid){
+	$userIp = getUserIp();
+	$curDate = date("Y-m-d H:i:s", strtotime("now"));
+	$updateStr = "update user_data set status=1, loginIp=\"";
+	$updateStr .= $userIp ."\", operateDate=\"" .$curDate;
+	$updateStr .= "\" where uid=" .$uid;
+	if(!mysql_query($updateStr))
+		return mysql_error();
+	else{
+		return 0;
 	}
-	else if(!$spm && $url){
-		$queryStr = "select * from user_data where url = \"";
-		$queryStr .= $url .'"';
-	}
-	else if($url && $spm){
-		$queryStr = "select * from user_data where url = \"";
-		$queryStr .= $url ."\" or spm = \"".$spm .'"';
-	}else
-		return;
+
+}
+
+//查找账号是否存在数据库中
+function queryAccount($account){
+	$queryStr = "select * from user_data where email = \"";
+	$queryStr .= $account .'"';
 	$result = mysql_query($queryStr);
 	return $result;
 }
+
 
 //遍历数据
 function queryAll(){
