@@ -301,7 +301,10 @@ $(function(){
 			var regBtn = $('#regAndloginBtn');
 			regBtn.unbind();
 			regBtn.on('click', regist.postRegistData);
-			$('#signupModal').on('hidden.bs.modal', clearModal);
+			$('#signupModal').on('hidden.bs.modal', function(){
+				clearModal();
+				$('#regAndloginBtn').button('reset');
+			});
 		},
 		//初始化注册框
 		init: function(){
@@ -387,6 +390,9 @@ $(function(){
 		setLoginBtn: function(){
 			var loginBtn = $('#loginSubmitBtn');
 			loginBtn.on('click', login.postLoginData);
+			$('#loginModal').on('hidden.bs.modal', function(){
+				$('#loginSubmitBtn').button('reset');
+			});
 		},
 
 		//登录成功后的处理
@@ -404,6 +410,8 @@ $(function(){
 			this.getUserData(name, uid);
 			clearModal();
 			this.setMenuBtn();
+			this.setPWModal();
+			this.setUpdateBtn();
 		},
 
 		//向服务器请求用户信息
@@ -486,12 +494,16 @@ $(function(){
 		//设置密码框
 		setPWModal: function(){
 			$('#updatePWBtn').on('click', user.updatePW);
+			$('#updatePWModal').on('hidden.bs.modal', function()
+			{
+				$('#updatePWBtn').button('reset');
+				clearModal();
+			});
 				
 		},
 
 		//设置用户信息
 		setUserData: function(){
-			user.setUpdateBtn();
 			$('#nameInput').val(user.userData.name);
 			var phoneNumbers = user.userData.phoneNumber;
 			for(var i=0; i < phoneNumbers.length; i++){
@@ -574,7 +586,6 @@ $(function(){
 		setMenuBtn: function(){
 			$('#pw_li').on('click', function(){
 				$('#pw-warn-text').text('');
-				user.setPWModal();
 			});
 			$('#ud_li').on('click', function(){
 				$('#warn-text').text('');

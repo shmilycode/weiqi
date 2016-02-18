@@ -62,7 +62,8 @@ function handleMessage($msg){
 //处理插入事件
 function handleRegist($data){
 	$name = $data['name'];
-	$password = $data['password'] ^ key;
+	//密码存放前在预定义字符前添加反斜杠
+	$password = addslashes($data['password'] ^ key);
 	$email = $data['email'];
 	//将数组转化为字符串,用空格分隔
 	$phoneNumber = implode(' ', $data['phoneNumber']);
@@ -153,12 +154,12 @@ function handleUpdatePW($data){
 	while($row = mysql_fetch_array($users)){
 		$truePW = $row['password'];
 	}
-	if( $prePW ^ key != $truePW){
+	if(strcmp($prePW ^ key, $truePW)){
 		$Response['status'] = 'failed';
 		$Response['message'] = '当前密码错误';
 		return $Response;
 	}
-	$newPW = $data['newPassword'] ^ key;
+	$newPW = addslashes($data['newPassword'] ^ key);
 	$result = updatePassword($uid, $newPW);
 	if(!$result){
 		$Response['status'] = 'success';
