@@ -1,10 +1,12 @@
 //事件处理函数
 $(function(){
+	var serviceAddr = "/weiqi/php/index.php";
 
 	//根据页面中的参数对页面进行调整
 	var pageDisplay = {
 		init: function(){
 			var href = window.location.href;
+			href = decodeURIComponent(href);
 			var withUserReg = /weiqi\/\?(.*)/;
 			var userPara = withUserReg.exec(href);
 			//处于有用户登录的界面
@@ -16,22 +18,27 @@ $(function(){
 				var name = nameReg.exec(userPara[1]);
 				var uidReg = /uid=(.*)$/;
 				var uid = uidReg.exec(userPara[1]);
-				user.init(name[1], uid[1]);
+				user.init(uid[1]);
 				return;
+
 			}
 			var withSearchReg = /search\/\?(.*)/;
 			var searchPara = withSearchReg.exec(href);
 			if(searchPara && searchPara.length == 2){
+				pageDisplay.loginDisplay();
+				pageDisplay.searchDisplay();
 				//获取用户参数
-				var nameReg = /name=(.*)?&/;
+				var nameReg = /name=(.*?)&/;
 				var name = nameReg.exec(searchPara[1]);
-				var uidReg = /uid=(.*)&/;
+				var uidReg = /uid=(.*)?&/;
 				var uid = uidReg.exec(searchPara[1]);
 				var keywordReg = /search=(.*)$/;
 				var keyword = keywordReg.exec(searchPara[1]);
-				user.init(name[1], uid[1]);
-				pageDisplay.loginDisplay();
-				pageDisplay.searchDisplay();
+				user.init(uid[1]);
+				if(keyword)
+					search.searchServer(uid[1], keyword[1]);
+				else
+					search.searchAll(uid[1]);
 			}
 		},
 		//用户已经登录
@@ -266,7 +273,7 @@ $(function(){
 
 			$('#regAndloginBtn').button('loading');
 			//发送数据到服务端
-			$.post("php/index.php",
+			$.post(serviceAddr,
 			{ 
 				operation: 'regist',
 				name: name,
@@ -355,7 +362,7 @@ $(function(){
 			}
 			//发送数据到服务端
 			$('#loginSubmitBtn').button('loading');
-			$.post("php/index.php",
+			$.post(serviceAddr,
 			{
 				operation: 'login',
 				email: email,
@@ -407,8 +414,8 @@ $(function(){
 		//用户数据
 		userData:{
 		},
-		init: function(name, uid){
-			this.getUserData(name, uid);
+		init: function(uid){
+			this.getUserData(uid);
 			this.clearModal();
 			this.setMenuBtn();
 			this.setPWModal();
@@ -416,18 +423,24 @@ $(function(){
 		},
 
 		//向服务器请求用户信息
-		getUserData: function(name, uid){
-			$.post('php/index.php',{
+		getUserData: function(uid){
+			$.post(serviceAddr,{
 				operation: 'userdata',
-				name: name,
 				userId: uid
 			},
 			function(data,status){
 				//获取到的数据赋值给userData
 				if(status == 'success'){
-					data = JSON.parse(data);
-					user.userData = data;
-					user.setUserName(user.userData.name);
+					var data = JSON.parse(data);
+					switch(data.status){
+					case 'failed':
+						user.logout();
+					case 'success':
+						user.userData = data;
+						user.setUserName(user.userData.name);
+						break;
+					default: break;
+					};
 				}else{
 					pageDisplay.mentionPage('获取用户数据失败');
 				}
@@ -459,7 +472,7 @@ $(function(){
 				return;
 			}
 			$('#updatePWBtn').button('loading');
-			$.post("php/index.php",
+			$.post(serviceAddr,
 			{
 				operation: 'updatePW',
 				userId: user.userData.userId,
@@ -540,11 +553,12 @@ $(function(){
 			eduDate = eduDate ? eduDate : user.userData.eduDate;
 			var address = $('#addrInput').val();
 			address = address ? address : user.userData.address;
+			$('#regAndloginBtn').button('loading');
 			//发送数据到服务端
-			$.post("php/index.php",
+			$.post(serviceAddr,
 			{
 				operation: 'updateUserData',
-				userId: user.userData.id,
+				userId: user.userData.userId,
 				name: name,
 				email: email,
 				phoneNumber: phoneNumbers,
@@ -553,6 +567,28 @@ $(function(){
 				address: address
 			},
 			function(data, status){
+				if(status == 'success'){
+					data = JSON.parse(data);
+					switch(data.status){
+					case 'success':
+						pageDisplay.mentionPage('修改成功');
+						user.getUserData(user.userData.userId);
+						break;
+					case 'error':
+					case 'failed':
+						regist.illegalHandle('更新数据失败! ');
+						break;
+					default:
+						break;
+					};
+					
+				}else{
+					regist.illegalHandle('更新数据失败! ');
+				}
+				$('#regAndloginBtn').button('reset');
+			}).error(function(){
+				regist.illegalHandle('更新数据失败! ');
+				$('#regAndloginBtn').button('reset');
 			});
 
 		},
@@ -565,23 +601,21 @@ $(function(){
 
 		//退出登录
 		logout: function(){
-			location.href='/weiqi/';
-			user.setUserName('');
-			user.userData={};
-
-			$.post('php/index.php',{
+			$.post(serviceAddr,{
 				operation: 'logout',
-				name: user.userData.name,
-				userId: user.userData.id
+				userId: user.userData.userId
 			},
 			function(data, status){
-				if(status == success){
-					$('#passwordForm').removeClass('sr-only');
-					$('#navbar-right-login').addClass('sr-only');
-					$('#navbar-right-logout').removeClass('sr-only');
-					user.setUserName('');
-				}
+				if(status == 'success'){var i = 1;}
 			});
+			user.setUserName('');
+			user.userData={};
+			$('#passwordForm').removeClass('sr-only');
+			$('#navbar-right-login').addClass('sr-only');
+			$('#navbar-right-logout').removeClass('sr-only');
+			user.setUserName('');
+			location.href='/weiqi/';
+
 		},
 
 		setMenuBtn: function(){
@@ -660,6 +694,7 @@ $(function(){
 
 		setSearchBtn: function(){
 			$('#searchBtn').on('click', search.searchOpt);
+			$('#searchAll').on('click', search.searchAllOpt);
 		},
 
 		//搜索操作
@@ -676,18 +711,76 @@ $(function(){
 				'&uid='+user.userData.userId+'&search='+searchKW;
 		},
 
-		//向服务器搜索
+		//搜索全部用户操作
+		searchAllOpt: function(){
+			if(!user.userData.name){
+				//如果还没登录，则显示登录框
+				$('#loginBtn').click();
+				return;
+			}
+			window.location.href='/weiqi/search?name='+user.userData.name+
+				'&uid='+user.userData.userId+'&search';
+		},
+
+
+		//向服务器搜索指定keyword的数据
 		searchServer: function(uid, keyword){
 			$('#result_mes').text('正在搜索中...');
-			$.post('php/index.php',
+			$.post(serviceAddr,
 			{
 				operation: 'search',
 				userId:	uid,
 				keyword: keyword
 			},
 			function(data, status){
-				search.showSearchResult(keyword,res);
+				if(status == 'success'){
+					data = JSON.parse(data);
+					switch(data.status){
+					case 'error':
+						user.logout(user.userData.userId);
+						break;
+					case 'failed':
+					case 'success':
+						search.showSearchResult(keyword,data);
+						break;
+					default: break;
+					};
+				}
+				else
+					$('#result_mes').text('搜索失败! ');
+			}).error(function(){
+				$('#result_mes').text('服务器错误！');
 			});
+		},
+
+		//向服务顺搜索全部数据
+		searchAll: function(uid){
+			$('#result_mes').text('正在搜索中...');
+			$.post(serviceAddr,
+			{
+				operation: 'searchAll',
+				userId:	uid,
+			},
+			function(data, status){
+				if(status == 'success'){
+					data = JSON.parse(data);
+					switch(data.status){
+					case 'error':
+						user.logout(user.userData.userId);
+						break;
+					case 'failed':
+					case 'success':
+						search.showSearchResult(null,data);
+						break;
+					default: break;
+					};
+				}
+				else
+					$('#result_mes').text('搜索失败! ');
+			}).error(function(){
+				$('#result_mes').text('服务器错误！');
+			});
+
 		},
 
 		//设置显示搜索结果
@@ -697,22 +790,23 @@ $(function(){
 				return;
 			}
 			$('#result_mes').text('共找到 '+res.count+' 个结果');
-			var panel = $('<div></div>').addClass('panel panel-primary');
-			var panel_head = $('<div></div>').addClass('panel-heading').append($('<h3></h3>').addClass('panel-title'));
-			var panel_body = $('<div></div>').addClass('panel-body');
-			var panel_footer = $('<div></div>').addClass('panel-footer');
-			var result = res.result;
-			for(var i=0; i < res; i++){
+			var result = res.userData;
+			for(var i=0; i < res.count; i++){
 				var friend = result[i];
+				var panel = $('<div></div>').addClass('panel panel-primary');
+				var panel_head = $('<div></div>').addClass('panel-heading').append($('<h3></h3>').addClass('panel-title'));
+				var panel_body = $('<div></div>').addClass('panel-body');
+				var panel_footer = $('<div></div>').addClass('panel-footer');
 				panel_head.children('h3').text(friend.name);
-				var telNumbers = friend.phoneNumber;
-				for(var tel in telNumbers){
-					panel_body.append($('<p></p>').text('电话：'+tel));
+				var phoneNumber = friend.phoneNumber;
+				for(var n =0; n < phoneNumber.length; n++){
+					panel_body.append($('<p></p>').text('电话：'+phoneNumber[n]));
 				}
-				panel_body.append($('<p></p>').text('街道：' + friend.address));
-				panel_body.append($('<p></p>').text(friend.education + '：' +
+				panel_body.append($('<p></p>').text(friend.education + '入学时间：' +
 					friend.eduDate));
-				panel_footer.text('最后修改时间：'+friend.lastChange);
+				panel_body.append($('<p></p>').text('电子邮箱：' + friend.email));
+				panel_body.append($('<p></p>').text('街道：' + friend.address));
+				panel_footer.text('最后修改时间：'+friend.modifiedDate);
 
 				panel.append(panel_head).append(panel_body).append(panel_footer);
 				$('#result_list').append(panel);

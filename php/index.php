@@ -51,7 +51,10 @@ function handleMessage($msg){
 		$Response = handleLogout($data);
 		break;
 	case 'search':
-		$Response = handleSearch($data);
+		$Response = handleSearch($data, false);
+		break;
+	case 'searchAll':
+		$Response = handleSearch($data, true);
 		break;
 	default:
 		break;
@@ -92,6 +95,8 @@ function handleLogin($data){
 	$pw = 0;
 	$uid = 0;
 	$name = 0;
+	if(!$result)
+		return;
 	while($row = mysql_fetch_array($result)){
 		$uid = $row['uid'];
 		$pw = $row['password'];
@@ -122,17 +127,21 @@ function handleLogin($data){
 		$Response['message'] = $res;
 	}
 	return $Response;
-}
-
-//获取用户信息
+} //获取用户信息
 function handleUserData($data){
 	$uid = $data['userId'];
 	$result = queryUid($uid);
 	if(!$result){
-		echo $uid;
 		return;
 	}
 	while($row = mysql_fetch_array($result)){
+		//如果用户不是处于登录状态
+		if(!$row['status']){
+			$Response['status'] = 'failed';
+			$Response['message'] = '用户未登录';
+			return $Response;
+		}
+		$Response['status'] = 'success';
 		$Response['userId'] = $row['uid'];
 		$Response['name'] = $row['name'];
 		$Response['phoneNumber'] = explode(' ', $row['phoneNumber']);
@@ -168,6 +177,107 @@ function handleUpdatePW($data){
 		$Response['status'] = 'error';
 		$Response['message'] = $result;
 	}
+	return $Response;
+}
+
+//处理修改用户资料
+function handleUpdateUserData($data){
+	$uid = $data['userId'];
+	$result = queryUid($uid);
+	if(!$result){
+		$Response['error'] = 'error';
+		$Response['message'] = '用户不存在';
+		return;
+	}
+	while($row = mysql_fetch_array($result)){
+		$name = $data['name'];
+		$email = $data['email'];
+		$phoneNumber = implode(' ', $data['phoneNumber']);
+		$education = $data['education'];
+		$eduDate = $data['eduDate'];
+		$address = $data['address'];
+		$res = updateUserData($uid, $name, $email, $phoneNumber, 
+			$education, $eduDate, $address);
+		if(!$res){
+			$Response['status'] = 'success';
+			$Response['message'] = '更新数据成功';
+		}else{
+			$Response['status'] = 'failed';
+			$Response['message'] = $res;
+		}
+		return $Response;
+	}
+}
+
+//处理注销登录事件
+function handleLogout($data){
+	$uid = $data['userId'];
+	if($uid == 0){
+		$Response['status'] = 'success';
+		$Response['message'] = '用户不存在';
+		return $Response;
+	}
+	$result = queryUid($uid);
+	if(!$result){
+		$Response['status'] = 'success';
+		$Response['message'] = '用户不存在';
+		return;
+	}
+	while($row = mysql_fetch_array($result)){
+		$result = updateLogout($uid);
+		if(!$result){
+			$Response['status'] = 'success';
+			$Response['message'] = '注销成功';
+		}else{
+			$Response['status'] = 'failed';
+			$Response['message'] = $result;
+		}
+	}
+	return $Response;
+}
+
+//处理搜索事件
+function handleSearch($data, $queryAll){
+	$uid = $data['userId'];
+	$result = queryUid($uid);
+	if(!$result){
+		$Response['status'] = 'error';
+		$Response['message'] = '用户不存在';
+		return $Response;
+	}
+	while($row = mysql_fetch_array($result)){
+		//如果用户不是处于登录状态
+		if(!$row['status']){
+			$Response['status'] = 'error';
+			$Response['message'] = '用户未登录';
+			return $Response;
+		}
+	}
+	//是否查找全部人
+	if(!$queryAll)
+		$result = queryName($data['keyword']);
+	else
+		$result = queryAll();
+	if(!$result){
+		$Response['status'] = 'failed';
+		$Response['message'] = '未找到满足条件用户';
+		$Response['count'] = 0;
+		return $Response;
+	}
+	$Response['status'] = 'success';
+	$Response['count'] = mysql_num_rows($result);
+	$users = array();
+	while($row = mysql_fetch_array($result)){
+		$user['name'] = $row['name'];
+		$user['phoneNumber'] = explode(' ', $row['phoneNumber']);
+		$user['education'] = $row['education'];
+		$user['eduDate'] = $row['eduDate'];
+		$user['address'] = $row['address'];
+		$user['email'] = $row['email'];
+		$user['modifiedDate'] = $row['modifiedDate'];
+		$users[] = $user;
+	}
+	$Response['userData'] = $users;
 	return $Response;
 }
 
@@ -246,16 +356,52 @@ function updateLogin($uid){
 	}
 
 }
+//用户注销登录，修改数据库
+function updateLogout($uid){
+	$curDate = date("Y-m-d H:i:s", strtotime("now"));
+	$updateStr = "update user_data set status=0, operateDate=\"";
+	$updateStr .= $curDate ."\" where uid=" .$uid;
+	echo $updateStr;
+	if(!mysql_query($updateStr))
+		return mysql_error();
+	else{
+		return 0;
+	}
+
+}
 
 //根据uid修改用户密码
 function updatePassword($uid, $newPW){
+	$curDate = date("Y-m-d H:i:s", strtotime("now"));
 	$updateStr = "update user_data set password = \"";
-	$updateStr  .= $newPW ."\" where uid = ";
+	$updateStr .= $newPW ."\", operateDate = \"";
+	$updateStr .= $curDate ."\" where uid = ";
 	$updateStr .= $uid;
 	if(!mysql_query($updateStr))
 		return mysql_error();
 	else
 		return 0;
+}
+
+//根据uid修改用户资料
+function updateUserData($uid, $name, $email, $phoneNumber, $education,
+			$eduDate, $address){
+	$curDate = date("Y-m-d H:i:s", strtotime("now"));
+	$updateStr = "update user_data set name = \"";
+	$updateStr .= $name ."\", email = \"";
+	$updateStr .= $email ."\", phoneNumber = \"";
+	$updateStr .= $phoneNumber ."\", education = \"";
+	$updateStr .= $education ."\", eduDate = \"";
+	$updateStr .= $eduDate ."\", address = \"";
+	$updateStr .= $address ."\", modifiedDate = \"";
+	$updateStr .= $curDate ."\", operateDate = \"";
+	$updateStr .= $curDate ."\" where uid = ";
+	$updateStr .= $uid;
+	if(!mysql_query($updateStr))
+		return mysql_error();
+	else
+		return 0;
+
 }
 
 //根据账号查找用户
@@ -270,6 +416,14 @@ function queryAccount($account){
 function queryUid($uid){
 	$queryStr = "select * from user_data where uid=";
 	$queryStr .= $uid;
+	$result = mysql_query($queryStr);
+	return $result;
+}
+
+//根据NAME查找用户
+function queryName($name){
+	$queryStr = "select * from user_data where name LIKE \"%";
+	$queryStr .= $name .'%"';
 	$result = mysql_query($queryStr);
 	return $result;
 }
