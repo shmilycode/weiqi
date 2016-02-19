@@ -62,17 +62,18 @@ $(function(){
 		}
 	};
 
-	//将modal中所有输入框和记录清空
-	function clearModal(){
-		$.each($('#modal-form').find('input'), function(index, inputBox){
-			inputBox.value='';
-		});
-		$('#telListGroup').empty();
-		$('#warn-text').text('');
-	};
-
+	
 	//注册框处理事件
 	var regist = { 
+		//将modal中所有输入框和记录清空
+		clearModal: function(){
+			$.each($('#modal-form').find('input'), function(index, inputBox){
+			inputBox.value='';
+			});
+			$('#telListGroup').empty();
+			$('#warn-text').text('');
+		},
+
 		//添加电话号码框
 		appendTelGroup: function(telNumber){
 			var telSpan = $("<span></span>").addClass("input-group-btn");
@@ -302,7 +303,7 @@ $(function(){
 			regBtn.unbind();
 			regBtn.on('click', regist.postRegistData);
 			$('#signupModal').on('hidden.bs.modal', function(){
-				clearModal();
+				regist.clearModal();
 				$('#regAndloginBtn').button('reset');
 			});
 		},
@@ -408,7 +409,7 @@ $(function(){
 		},
 		init: function(name, uid){
 			this.getUserData(name, uid);
-			clearModal();
+			this.clearModal();
 			this.setMenuBtn();
 			this.setPWModal();
 			this.setUpdateBtn();
@@ -497,7 +498,7 @@ $(function(){
 			$('#updatePWModal').on('hidden.bs.modal', function()
 			{
 				$('#updatePWBtn').button('reset');
-				clearModal();
+				user.clearModal();
 			});
 				
 		},
@@ -594,6 +595,22 @@ $(function(){
 			$('#logoutBtn').on('click', function(){
 				user.logout();
 			});
+		},
+
+		clearModal: function(){
+			$.each($('#updatePWModal').find('input'), 
+				function(index, inputBox){
+				inputBox.value='';
+			});
+			$.each($('#modal-form').find('input'), 
+				function(index, inputBox){
+				inputBox.value='';
+			});
+
+			$('#telListGroup').empty();
+			$('#warn-text').text('');
+			$('#pw-warn-text').text('');
+	
 		}
 	};
 	var pictureWall = {
