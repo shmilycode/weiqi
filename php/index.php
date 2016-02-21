@@ -32,6 +32,9 @@ function handleMessage($msg){
 	$data = $msg;
 	$Response = array();
 	switch ($Opt){
+	case 'count': 
+		$Response = handleCount($data);
+		break;
 	case 'regist':
 		$Response = handleRegist($data);
 		break;
@@ -62,12 +65,30 @@ function handleMessage($msg){
 		echo json_encode($Response);
 }
 
-//处理插入事件
+//处理获取用户数量事件
+function handleCount($data){
+	$result = queryAll();
+	if(!$result){
+		$Response['status'] = 'failed';
+		$Response['count'] = 0;
+		return $Response;
+	}
+	$Response['status'] = 'success';
+	$Response['count'] = mysql_num_rows($result);
+	return $Response;
+}
+
+//处理注册事件
 function handleRegist($data){
 	$name = $data['name'];
 	//密码存放前在预定义字符前添加反斜杠
 	$password = addslashes($data['password'] ^ key);
 	$email = $data['email'];
+	if(mysql_num_rows(queryEmail($email))){
+		$Response['status'] = 'failed';
+		$Response['message'] = '邮箱已被注册';
+		return $Response;
+	}
 	//将数组转化为字符串,用空格分隔
 	$phoneNumber = implode(' ', $data['phoneNumber']);
 	$education = $data['education'];
@@ -95,13 +116,12 @@ function handleLogin($data){
 	$pw = 0;
 	$uid = 0;
 	$name = 0;
-	if(!$result)
-		return;
+	if($result){
 	while($row = mysql_fetch_array($result)){
 		$uid = $row['uid'];
 		$pw = $row['password'];
 		$name = $row['name'];
-	}
+	}}
 	//用户不存在
 	if(!$uid){
 		$Response['status'] = 'non-existent';
@@ -192,6 +212,16 @@ function handleUpdateUserData($data){
 	while($row = mysql_fetch_array($result)){
 		$name = $data['name'];
 		$email = $data['email'];
+		$sameEmail = queryEmail($email);
+		if(mysql_num_rows($sameEmail)){
+			while($row = mysql_fetch_array($sameEmail)){
+				if($row['uid'] != $uid){
+					$Response['status'] = 'failed';
+					$Response['message'] = '邮箱已被注册';
+					return $Response;
+				}
+			}
+		}
 		$phoneNumber = implode(' ', $data['phoneNumber']);
 		$education = $data['education'];
 		$eduDate = $data['eduDate'];
@@ -202,7 +232,7 @@ function handleUpdateUserData($data){
 			$Response['status'] = 'success';
 			$Response['message'] = '更新数据成功';
 		}else{
-			$Response['status'] = 'failed';
+			$Response['status'] = 'error';
 			$Response['message'] = $res;
 		}
 		return $Response;
@@ -428,6 +458,13 @@ function queryName($name){
 	return $result;
 }
 
+//根据EMAIL查找用户
+function queryEmail($email){
+	$queryStr = "select * from user_data where email = \"";
+	$queryStr .= $email .'"';
+	$result = mysql_query($queryStr);
+	return $result;
+}
 //遍历数据
 function queryAll(){
 	$result = mysql_query("select * from user_data");

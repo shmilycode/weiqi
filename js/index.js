@@ -69,7 +69,23 @@ $(function(){
 		}
 	};
 
-	
+	//Logo的处理事件
+	var logo = {
+		init:function(){
+			this.setLogoBtn();
+		},
+
+		setLogoBtn: function(){
+			$('#navbar_title').on('click', function(){
+				if(!user.userData){
+					window.location.href="/weiqi/";
+				}else{
+					window.location.href="/weiqi/?name="+user.userData.name+"&uid="+user.userData.userId;
+				}
+			});
+		},
+
+	};
 	//注册框处理事件
 	var regist = { 
 		//将modal中所有输入框和记录清空
@@ -239,8 +255,12 @@ $(function(){
 				return;
 			}
 			var email = $('#mailInput').val();
+			var emailReg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/;
 			if(!email){
 				regist.illegalHandle('邮箱不能为空！');
+				return;
+			}else if(!emailReg.test(email)){
+				regist.illegalHandle('请输入正确的邮箱! ');
 				return;
 			}
 
@@ -292,8 +312,15 @@ $(function(){
 					case 'success':
 						$('#signupModal').modal('hide');
 						pageDisplay.mentionPage('注册成功！');	
-
+						break;
 					case 'failed': 
+						regist.illegalHandle('邮箱已被注册，请重新输入');
+						break;
+					case 'error':
+						pageDisplay.mentionPage('注册失败！');
+						break;
+					default:
+						break;
 					};
 				}else{
 					regist.illegalHandle('因服务器问题，注册失败！');
@@ -532,10 +559,15 @@ $(function(){
 
 		//保存用户修改信息
 		updateUserData: function(){
-			$('warn-text').text('');
+			$('#warn-text').text('');
 			var name=$('#nameInput').val();
 			name = name ? name : user.userData.name;
 			var email = $('#mailInput').val();
+			var emailReg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/;
+			if(!emailReg.test(email)){
+				regist.illegalHandle('请输入正确的邮箱！');
+				return;
+			}
 			email = email ? email : user.userData.email;
 			$('#addTelBtn').click();
 			var phoneGroup = $('#telListGroup').find('input');
@@ -575,8 +607,10 @@ $(function(){
 						user.getUserData(user.userData.userId);
 						break;
 					case 'error':
+						pageDisplay.mentionPage('修改失败！');
+						break;
 					case 'failed':
-						regist.illegalHandle('更新数据失败! ');
+						regist.illegalHandle('邮箱已被注册，请重新输入');
 						break;
 					default:
 						break;
@@ -659,6 +693,7 @@ $(function(){
 			this.addSmPicture('picture (6).jpg');
 			this.addSmPicture('picture (7).jpg');
 			this.addSmPicture('picture (8).jpg');
+			this.addSmPicture('2.jpg');
 		},
 			
 		//添加大图片
@@ -791,8 +826,18 @@ $(function(){
 			}
 			$('#result_mes').text('共找到 '+res.count+' 个结果');
 			var result = res.userData;
+			var eduGroup = {};
+			var addrGroup = {};
 			for(var i=0; i < res.count; i++){
 				var friend = result[i];
+				if(eduGroup[friend.education])
+					eduGroup[friend.education]++;
+				else
+					eduGroup[friend.education] = 1;
+				if(addrGroup[friend.address])
+					addrGroup[friend.address]++;
+				else
+					addrGroup[friend.address] = 1;
 				var panel = $('<div></div>').addClass('panel panel-primary');
 				var panel_head = $('<div></div>').addClass('panel-heading').append($('<h3></h3>').addClass('panel-title'));
 				var panel_body = $('<div></div>').addClass('panel-body');
@@ -802,8 +847,10 @@ $(function(){
 				for(var n =0; n < phoneNumber.length; n++){
 					panel_body.append($('<p></p>').text('电话：'+phoneNumber[n]));
 				}
+				/*
 				panel_body.append($('<p></p>').text(friend.education + '入学时间：' +
 					friend.eduDate));
+				*/
 				panel_body.append($('<p></p>').text('电子邮箱：' + friend.email));
 				panel_body.append($('<p></p>').text('街道：' + friend.address));
 				panel_footer.text('最后修改时间：'+friend.modifiedDate);
@@ -811,29 +858,32 @@ $(function(){
 				panel.append(panel_head).append(panel_body).append(panel_footer);
 				$('#result_list').append(panel);
 			}
+
+			//this.sortResult('Education', eduGroup);
+			this.sortResult('Address', addrGroup);
+		},
+
+		//对搜索结果进行分组
+		sortResult: function(listName, group){
+			var sideList = $('<div></div>').addClass('m_sidebar');
+			sideList.append($('<h2></h2>').text(listName));
+			var sideGroup = $('<ul></ul>').addClass('list-group');
+			for(itemName in group){
+				var listItem = $('<li></li>').addClass('list-group-item');
+				listItem.append($('<span></span>').addClass('badge').text(group[itemName]));
+				listItem.append($('<span></span>').text(itemName));
+				sideGroup.append(listItem);
+			}
+			sideList.append(sideGroup);
+			$('#sidebar').append(sideList);
 		}
 	};
 
-	regist.init();
-	pageDisplay.init();
-	search.init();
-	pictureWall.init();
-	$('#registBtn').on('click',function(){
-		regist.init();
-	});
 
-	$('#loginBtn').on('click', function(){
-		login.init();
-	});
-});
-
-
-//闪烁文字
-$(function() {
+	//闪烁文字
 	var message = {
 
 		message: [
-			'现在共有n位朋友', 
 			'他们都是人渣', 
 			'没事来约我踢球啊', 
 		],
@@ -843,11 +893,27 @@ $(function() {
 
 		init: function() {
 			this.cacheElem();
-			this.type();
+			this.showMessage();
 		},
 
 		cacheElem: function() {
 			this.$text = $('#flash_text');
+		},
+
+		showMessage: function(){
+			$.post(serviceAddr,
+			{
+				operation: 'count',
+			},
+			function(data, status){
+				if(status == 'success')
+					data = JSON.parse(data);
+					message.message.push('现在共有' + data.count + '个朋友');
+				message.type();
+			}).error(function(){
+				message.type();
+			});
+
 		},
 
 		type: function() {
@@ -879,4 +945,16 @@ $(function() {
 		}
 	};
 	message.init();
+	logo.init();
+	regist.init();
+	pageDisplay.init();
+	search.init();
+	pictureWall.init();
+	$('#registBtn').on('click',function(){
+		regist.init();
+	});
+
+	$('#loginBtn').on('click', function(){
+		login.init();
+	});
 });
