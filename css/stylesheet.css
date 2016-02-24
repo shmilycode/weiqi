@@ -42,6 +42,16 @@ body,button,input,select,textarea,h1,h2,h3,h4,h5,h6{
   margin-bottom: 20px;
 }
 
+.m_divider{
+  box-shadow: 0 1px #d9d9d9;
+}
+
+.m_divider span{
+	padding-top: 8px;
+	padding-bottom: 8px;
+	padding-right: 10px;
+}
+
 .m_background-text{
   color: #cecece;
 }

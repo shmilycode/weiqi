@@ -77,7 +77,10 @@ $(function(){
 
 		setLogoBtn: function(){
 			$('#navbar_title').on('click', function(){
-				if(!user.userData){
+				var len = 0;
+				for(data in user.userData)
+					len++;
+				if(!len){
 					window.location.href="/weiqi/";
 				}else{
 					window.location.href="/weiqi/?name="+user.userData.name+"&uid="+user.userData.userId;
@@ -363,6 +366,8 @@ $(function(){
 
 	var login = {
 		init: function(){
+			var storage = window.localStorage;
+			$('#loginEmailInput').val(storage.username);
 			this.setLoginBtn();
 		},
 
@@ -382,6 +387,7 @@ $(function(){
 				login.illegalHandle('邮箱不能为空！');
 				return;
 			}
+			login.saveUserName(email);
 			var password = $('#loginPasswordInput').val();
 			if(!password){
 				login.illegalHandle('密码不能为空！');
@@ -429,6 +435,12 @@ $(function(){
 				$('#loginSubmitBtn').button('reset');
 			});
 		},
+		
+		//设置记忆用户名
+		saveUserName: function(name){
+			var storage = window.localStorage;
+			storage.username = name;
+		},
 
 		//登录成功后的处理
 		loginSuccess: function(data){
@@ -439,8 +451,7 @@ $(function(){
 
 	var user = {
 		//用户数据
-		userData:{
-		},
+		userData:{},
 		init: function(uid){
 			this.getUserData(uid);
 			this.clearModal();
@@ -647,7 +658,6 @@ $(function(){
 			$('#passwordForm').removeClass('sr-only');
 			$('#navbar-right-login').addClass('sr-only');
 			$('#navbar-right-logout').removeClass('sr-only');
-			user.setUserName('');
 			location.href='/weiqi/';
 
 		},
@@ -693,7 +703,7 @@ $(function(){
 			this.addSmPicture('picture (6).jpg');
 			this.addSmPicture('picture (7).jpg');
 			this.addSmPicture('picture (8).jpg');
-			this.addSmPicture('2.jpg');
+			//this.addSmPicture('2.jpg');
 		},
 			
 		//添加大图片
@@ -944,12 +954,92 @@ $(function(){
 			setTimeout(function(){that.type()}, speed);
 		}
 	};
+
+	//上传图片操作
+	var uploadImage = {
+		imageFile: 0,
+
+		init: function(){
+			this.setImgSelectBtn();
+			this.setImgUploadBtn();
+			this.imageFile = 0;
+		},
+
+		//将用户选择的头像图片文件取出
+		handleHeadImage: function(files){
+			for (var i = 0; i< files.length; i++){
+				var file = files[i];
+				var imageType = /image.*/;
+
+				//如果不是图片文件
+				if (!file.type.match(imageType)){
+					return;
+				}
+				//如果图片大小超过2M
+				if (file.size / (1024*1024) >= 2){
+					return;
+				}	
+				var rawimg = $('#rawImg');
+				var rawreader = new FileReader();
+				rawreader.onload = (function(aImg){
+					return function(e){
+						aImg.attr('src',e.target.result);
+					};
+				})(rawimg);
+				rawreader.readAsDataURL(file);
+				var itemimg = $('#itemImg');
+				var itemreader = new FileReader();
+				itemreader.onload = (function(aImg){
+					return function(e){
+						aImg.attr('src',e.target.result);
+					};
+				})(itemimg);
+				itemreader.readAsDataURL(file);
+				var headimg = $('#headImg');
+				var headreader = new FileReader();
+				headreader.onload = (function(aImg){
+					return function(e){
+						aImg.attr('src',e.target.result);
+					};
+				})(headimg);
+				headreader.readAsDataURL(file);
+				imageFile = file;
+			}
+		},
+
+		setImgSelectBtn: function(){
+			$('#imgSelectBtn').on('change', function(){
+				var files = $('#imgSelectBtn')[0].files;
+				uploadImage.handleHeadImage(files);
+			});
+		},
+
+		//上传图片
+		uploadHeadImage: function(){
+			$('#imgUploadBtn').button('loading');
+			$.post(serviceAddr,
+			{
+				operation: 'uploadHeadimage',
+				image: uploadImage.imageFile
+			},function(data, status){
+				$('#imgUploadBtn').button('reset');
+			}).error(function(){
+				$('#imgUploadBtn').button('reset');
+			});
+		},
+
+		setImgUploadBtn: function(){
+			$('#imgUploadBtn').on('click', uploadImage.uploadHeadImage);
+		}
+
+	};
 	message.init();
 	logo.init();
 	regist.init();
 	pageDisplay.init();
 	search.init();
 	pictureWall.init();
+	uploadImage.init();
 	$('#registBtn').on('click',function(){
 		regist.init();
 	});
