@@ -50,7 +50,7 @@
 	      <li class="col-xs-12 m_divider">
 	        <div class="col-xs-6 col-xs-offset-3" data-toggle="modal" data-target="#uploadImageModal" style="cursor: pointer;">
 	          <center><span class="glyphicon glyphicon-camera" style="font-size: 40px;" id="camera"></span></center>
-	          <img class="img-responsive img-circle">
+	          <img class="img-responsive img-circle" id="headImage">
 	        </div>
 		<div class="col-xs-12">
 	          <p class="text-center" id="image_name" style="color: black;">傻逼二号<p>
@@ -325,11 +325,12 @@
         <form>
 	  <div class="form-group">
 	    <label for="imgSelectBtn">选择图片</label>
-	    <input type="file"id="imgSelectBtn">
+	    <input type="file"id="imgSelectBtn" value='weiqi'>
+	    <p id='uploadMention' style='color: red;'></p>
 	  </div><!--div class="form-group"-->
 	</form>
 	  <div class="row">
-	    <p>仅支持JPG, PNG格式;文件小于5M</p>
+	    <p>仅支持JPG, PNG格式;文件小于1M</p>
 	    <div class="col-sm-5">
 	      <img class="img-thumbnail img-responsive" src="../picture-wall/giraffe.jpg" id="rawImg">
 	    </div>

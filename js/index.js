@@ -18,7 +18,7 @@ $(function(){
 				var name = nameReg.exec(userPara[1]);
 				var uidReg = /uid=(.*)$/;
 				var uid = uidReg.exec(userPara[1]);
-				user.init(uid[1]);
+				user.init(name[1], uid[1]);
 				return;
 
 			}
@@ -34,7 +34,7 @@ $(function(){
 				var uid = uidReg.exec(searchPara[1]);
 				var keywordReg = /search=(.*)$/;
 				var keyword = keywordReg.exec(searchPara[1]);
-				user.init(uid[1]);
+				user.init(name[1],uid[1]);
 				if(keyword)
 					search.searchServer(uid[1], keyword[1]);
 				else
@@ -452,7 +452,8 @@ $(function(){
 	var user = {
 		//用户数据
 		userData:{},
-		init: function(uid){
+		init: function(name, uid){
+			this.setUserName(name);
 			this.getUserData(uid);
 			this.clearModal();
 			this.setMenuBtn();
@@ -475,7 +476,13 @@ $(function(){
 						user.logout();
 					case 'success':
 						user.userData = data;
-						user.setUserName(user.userData.name);
+						user.setUserName(data.name);
+						if(data.headImage){
+							$('#camera').addClass('sr-only');
+							$('#headImage').attr('src', user.userData.headImage);
+						}
+						$('#image_name').text(data.name);
+						$('#image_email').text(data.email);
 						break;
 					default: break;
 					};
@@ -960,23 +967,43 @@ $(function(){
 		imageFile: 0,
 
 		init: function(){
+			this.setModal();
 			this.setImgSelectBtn();
 			this.setImgUploadBtn();
 			this.imageFile = 0;
 		},
 
+		setModal: function(){
+			$('#headImage').on('click',uploadImage.initModal);
+		},
+
+		initModal: function(){
+			$('#uploadMention').text('');
+			var headImage = user.userData.headImage;
+			if(!user.userData.headImage)
+				return;
+			$('#camera').addClass('sr-only');
+			$('#rawImg').attr('src', headImage);
+			$('#itemImg').attr('src', headImage);
+			$('#headImg').attr('src', headImage);
+		},
+
 		//将用户选择的头像图片文件取出
 		handleHeadImage: function(files){
+			$('#uploadMention').text('');
+			uploadImage.imageFile = 0;
 			for (var i = 0; i< files.length; i++){
 				var file = files[i];
 				var imageType = /image.*/;
 
 				//如果不是图片文件
 				if (!file.type.match(imageType)){
+					$('#uploadMention').text('请确保选择的文件为图片文件！');
 					return;
 				}
-				//如果图片大小超过2M
-				if (file.size / (1024*1024) >= 2){
+				//如果图片大小超过1M
+				if (file.size / (1024*1024) >= 1){
+					$('#uploadMention').text('图片大小超过1M，无法上传');
 					return;
 				}	
 				var rawimg = $('#rawImg');
@@ -984,6 +1011,7 @@ $(function(){
 				rawreader.onload = (function(aImg){
 					return function(e){
 						aImg.attr('src',e.target.result);
+						uploadImage.imageFile = e.target.result;
 					};
 				})(rawimg);
 				rawreader.readAsDataURL(file);
@@ -1003,7 +1031,6 @@ $(function(){
 					};
 				})(headimg);
 				headreader.readAsDataURL(file);
-				imageFile = file;
 			}
 		},
 
@@ -1016,14 +1043,40 @@ $(function(){
 
 		//上传图片
 		uploadHeadImage: function(){
+			if(!uploadImage.imageFile){
+				$('#uploadMention').text('请选择图片!');
+				return;
+			}
 			$('#imgUploadBtn').button('loading');
 			$.post(serviceAddr,
 			{
-				operation: 'uploadHeadimage',
+				operation: 'uploadHeadImage',
+				userId: user.userData.userId,
 				image: uploadImage.imageFile
 			},function(data, status){
+				if(status == 'success'){
+					data = JSON.parse(data);
+					switch(data.status){
+					case 'error':
+						user.logout(user.userData.userId);
+						break;
+					case 'failed':
+						pageDisplay.mentionPage('上传头像失败！');
+						break;
+					case 'success':
+						$('#headImage').attr('src',uploadImage.imageFile); 
+						pageDisplay.mentionPage('头像上传成功！');
+						break;
+					default: break;
+
+					};
+				}else{
+				}
+				$('#uploadImageModal').modal('hide');
 				$('#imgUploadBtn').button('reset');
 			}).error(function(){
+				pageDisplay.mentionPage('上传头像失败！');
+				$('#uploadImageModal').modal('hide');
 				$('#imgUploadBtn').button('reset');
 			});
 		},

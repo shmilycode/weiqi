@@ -59,6 +59,8 @@ function handleMessage($msg){
 	case 'searchAll':
 		$Response = handleSearch($data, true);
 		break;
+	case 'uploadHeadImage':
+		$Response = handleUploadHeadImage($data);
 	default:
 		break;
 	}
@@ -101,7 +103,7 @@ function handleRegist($data){
 		$Response['status'] = 'success';
 		$Response['message'] = '数据库插入成功';
 	}else{
-		$Response['status'] = 'failed';
+		$Response['status'] = 'error';
 		$Response['message'] = $result;
 	}
 	return $Response;
@@ -152,7 +154,9 @@ function handleUserData($data){
 	$uid = $data['userId'];
 	$result = queryUid($uid);
 	if(!$result){
-		return;
+		$Response['status'] = 'failed';
+		$Response['message'] = '用户不存在';
+		return $Response;
 	}
 	while($row = mysql_fetch_array($result)){
 		//如果用户不是处于登录状态
@@ -169,6 +173,11 @@ function handleUserData($data){
 		$Response['education'] = $row['education'];
 		$Response['eduDate'] = $row['eduDate'];
 		$Response['address'] = $row['address'];
+		$Response['headImage'] = $row['headImage'];
+	}
+	if(!$Response){
+		$Response['status'] = 'failed';
+		$Response['message'] = '用户不存在';
 	}
 	return $Response;
 }
@@ -311,6 +320,35 @@ function handleSearch($data, $queryAll){
 	return $Response;
 }
 
+function handleUploadHeadImage($data){
+	$uid = $data['userId'];
+	$result = queryUid($uid);
+	if(!$result){
+		$Response['status'] = 'error';
+		$Response['message'] = '用户不存在';
+		return $Response;
+	}
+	while($row = mysql_fetch_array($result)){
+		//如果用户不是处于登录状态
+		if(!$row['status']){
+			$Response['status'] = 'error';
+			$Response['message'] = '用户未登录';
+			return $Response;
+		}
+	}
+
+	$img = addslashes($data['image']);
+	$result = updateHeadImage($uid, $img);
+	if(!$result){
+		$Response['status'] = 'success';
+		$Response['message'] = '设置头像成功';
+	}else{
+		$Response['status'] = 'failed';
+		$Response['message'] = $result;
+	}
+	return $Response;
+}
+
 //获取客户端的IP
 function getUserIp(){
 	$userIp = $_SERVER["REMOTE_ADDR"];
@@ -343,7 +381,8 @@ function createTB($TBname, $con){
 			loginIp text,
 			registDate datetime,
 			modifiedDate datetime,
-			operateDate datetime
+			operateDate datetime,
+			headImage longblob
 			)";
 	if(!mysql_query($createStr, $con))
 		return "创建数据表失败: " .mysql_error();
@@ -425,6 +464,19 @@ function updateUserData($uid, $name, $email, $phoneNumber, $education,
 	$updateStr .= $eduDate ."\", address = \"";
 	$updateStr .= $address ."\", modifiedDate = \"";
 	$updateStr .= $curDate ."\", operateDate = \"";
+	$updateStr .= $curDate ."\" where uid = ";
+	$updateStr .= $uid;
+	if(!mysql_query($updateStr))
+		return mysql_error();
+	else
+		return 0;
+}
+
+//根据uid更新用户头像信息
+function updateHeadImage($uid, $img){
+	$curDate = date("Y-m-d H:i:s", strtotime("now"));
+	$updateStr = "update user_data set headImage = \"";
+	$updateStr .= $img ."\", operateDate = \"";
 	$updateStr .= $curDate ."\" where uid = ";
 	$updateStr .= $uid;
 	if(!mysql_query($updateStr))
