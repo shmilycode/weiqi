@@ -314,6 +314,7 @@ function handleSearch($data, $queryAll){
 		$user['address'] = $row['address'];
 		$user['email'] = $row['email'];
 		$user['modifiedDate'] = $row['modifiedDate'];
+		$user['headImage'] = $row['headImage'];
 		$users[] = $user;
 	}
 	$Response['userData'] = $users;

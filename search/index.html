@@ -32,23 +32,41 @@
 
     <!--右边选项-->
     <div class="collapse navbar-collapse" id="navbar-right">
-      <!--注销时的选项-->
-      <ul class="nav navbar-nav navbar-right sr-only" id="navbar-right-logout">
-        <li><button class="btn btn-link m_navbar-btn" role="button" data-toggle="modal" data-target="#signupModal" id="loginBtn">登录</button></li>
+     <!--注销时的选项-->
+      <ul class="nav navbar-nav navbar-right" id="navbar-right-logout">
+        <li><button class="btn btn-link m_navbar-btn" role="button" data-toggle="modal" data-target="#loginModal" id="loginBtn">登录</button></li>
         <li><button class="btn btn-primary m_navbar-btn active" role="button" data-toggle="modal" data-target="#signupModal" id="registBtn">注册</button></li>
       </ul>
-      <!--登录后的选项-->
-      <ul class="nav navbar-nav navbar-right" id="navbar-right-login">
+     <!--登录后的选项-->
+      <ul class="nav navbar-nav navbar-right sr-only" id="navbar-right-login">
         <li>
 	  <div class="btn-group">
 	    <button type="button" class="btn btn-link dropdown-toggle m_navbar-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 	    	<a id="userLabel"></a>
 	        <span class="caret"></span>
 	    </button>
-	    <ul class="dropdown-menu">
-	      <li><a data-toggle="modal" data-target="#updatePWModal" style="cursor: pointer;" id="pw_li">修改密码</a></li>
-	      <li><a data-toggle="modal" data-target="#signupModal" style="cursor: pointer;" id="ud_li">个人信息</a></li>
-	      <li><a href="#" id="logoutBtn">退出</a></li>
+	    <ul class="dropdown-menu" style="max-width: 300px; min-width: 240px;">
+	      <li class="col-xs-12 m_divider">
+	        <div class="col-xs-6 col-xs-offset-3" data-toggle="modal" data-target="#uploadImageModal" style="cursor: pointer;">
+	          <center><span class="glyphicon glyphicon-camera" style="font-size: 40px;" id="camera"></span></center>
+	          <img class="img-responsive img-circle" id="headImage">
+	        </div>
+		<div class="col-xs-12">
+	          <p class="text-center" id="image_name" style="color: black;"></p>
+		  <p class="text-center" id="image_email"></p>
+		</div>
+	      </li>
+	      <li><a data-toggle="modal" data-target="#updatePWModal" style="cursor: pointer;" id="pw_li" class="m_divider">
+	        <span class="glyphicon glyphicon-lock"></span>
+		修改密码
+	      </a></li>
+	      <li><a data-toggle="modal" data-target="#signupModal" style="cursor: pointer;" id="ud_li" class="m_divider">
+	        <span class="glyphicon glyphicon-user"></span>
+		个人信息
+	      </a></li>
+	      <li class="m_divider"><a href="#" id="logoutBtn" class="m_divider">
+	        <span class="glyphicon glyphicon-off"></span>退出
+	      </a></li>
 	    </ul>
 	  </div>
 	</li>
@@ -246,10 +264,55 @@
   </div><!--div class="modal-dialog"-->
 </div><!--修改密码框-->
 
+<!--上传图片-->
+<div class="modal fade" id="uploadImageModal" tabindex="-1" role="dialog" data-backdrop="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">
+	  <span aria-hidden="true">&times;</span>
+	</button>
+	<h3 class="modal-title text-center">上传头像</h3>
+      </div><!--div class="modal-header"-->
+
+      <div class="modal-body m_modal-body">
+        <form>
+	  <div class="form-group">
+	    <label for="imgSelectBtn">选择图片</label>
+	    <input type="file"id="imgSelectBtn" value='weiqi'>
+	    <p id='uploadMention' style='color: red;'></p>
+	  </div><!--div class="form-group"-->
+	</form>
+	  <div class="row">
+	    <p>仅支持JPG, PNG格式;文件小于1M</p>
+	    <div class="col-sm-5">
+	      <img class="img-thumbnail img-responsive" src="../../picture-wall/giraffe.jpg" id="rawImg">
+	    </div>
+	    <div class="col-sm-4">
+	      <img class="img-thumbnail img-circle img-responsive" src="../../picture-wall/giraffe.jpg" id="itemImg">
+	      <div class="caption">
+	        <p class="text-center">显示框效果</p>
+	      </div>
+	    </div>
+	    <div class="col-sm-3">
+	      <img class="img-thumbnail img-circle img-responsive" src="../../picture-wall/giraffe.jpg" id="headImg">
+	      <p class="text-center">头像效果</p>
+	    </div>
+	  </div><!--div class="row"-->
+      </div><!--div class="modal-body"-->
+
+      <div class="modal-footer">
+	<!--按键-->
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+  	    <button type="button" class="btn btn-primary" id="imgUploadBtn" data-loading-text="上传中..">上传</button>
+      </div>
+    </div><!--div class="modal-content"-->
+  </div><!--div class="modal-dialog"-->
+</div><!--上传图片-->
+
 <!--显示搜索结果-->
 <div class="m_search-background">
 <div class="container">
-
   <div class="col-xs-12">
     <!--左边侧边栏-->
     <div class="col-sm-4">

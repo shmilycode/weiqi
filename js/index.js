@@ -702,13 +702,15 @@ $(function(){
 		init: function(){
 			if(!$('#picture-wall').length)
 				return;
-			this.addLgPicture('picture (1).jpg');
-			this.addLgPicture('picture (2).jpg');
-			this.addSmPicture('picture (3).jpg');
-			this.addSmPicture('picture (4).jpg');
+			this.addLgPicture('shmily_1.jpg');
+			this.addLgPicture('luo.jpg');
+			this.addSmPicture('picture (1).jpg');
+			this.addSmPicture('picture (2).jpg');
+			this.addSmPicture('shmily_2.jpg');
 			this.addSmPicture('picture (5).jpg');
 			this.addSmPicture('picture (6).jpg');
 			this.addSmPicture('picture (7).jpg');
+			this.addSmPicture('picture (3).jpg');
 			this.addSmPicture('picture (8).jpg');
 			//this.addSmPicture('2.jpg');
 		},
@@ -859,17 +861,26 @@ $(function(){
 				var panel_head = $('<div></div>').addClass('panel-heading').append($('<h3></h3>').addClass('panel-title'));
 				var panel_body = $('<div></div>').addClass('panel-body');
 				var panel_footer = $('<div></div>').addClass('panel-footer');
+				var headImage = $('<div></div>').addClass('col-xs-3 col-sm-2');
+				if(!friend.headImage)
+					friend.headImage = '../../picture-wall/default-item.jpg';
+				headImage.append($('<img>').addClass('img-responsive img-circle').attr('src', friend.headImage));
+
+				var message = $('<div></div>').addClass('col-xs-9 col-sm-10');
+
 				panel_head.children('h3').text(friend.name);
 				var phoneNumber = friend.phoneNumber;
 				for(var n =0; n < phoneNumber.length; n++){
-					panel_body.append($('<p></p>').text('电话：'+phoneNumber[n]));
+					message.append($('<p></p>').text('电话：'+phoneNumber[n]));
 				}
 				/*
 				panel_body.append($('<p></p>').text(friend.education + '入学时间：' +
 					friend.eduDate));
 				*/
-				panel_body.append($('<p></p>').text('电子邮箱：' + friend.email));
-				panel_body.append($('<p></p>').text('街道：' + friend.address));
+				message.append($('<p></p>').text('电子邮箱：' + friend.email));
+				message.append($('<p></p>').text('街道：' + friend.address));
+				panel_body.append(headImage);
+				panel_body.append(message);
 				panel_footer.text('最后修改时间：'+friend.modifiedDate);
 
 				panel.append(panel_head).append(panel_body).append(panel_footer);
@@ -1064,6 +1075,7 @@ $(function(){
 						pageDisplay.mentionPage('上传头像失败！');
 						break;
 					case 'success':
+						$('#camera').addClass('sr-only');
 						$('#headImage').attr('src',uploadImage.imageFile); 
 						pageDisplay.mentionPage('头像上传成功！');
 						break;
