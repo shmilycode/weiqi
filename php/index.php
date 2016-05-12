@@ -2,9 +2,9 @@
 header("Content-type: text/txt; charset=utf-8");
 //数据库的信息
 $key = 666666;
-$servername = "120.27.110.28";
+$servername = "";
 $username = "root";
-$password = "weiqi123";
+$password = "";
 
 $con = mysql_connect($servername, $username, $password);
 if(!$con){
