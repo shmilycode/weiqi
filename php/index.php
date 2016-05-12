@@ -4,7 +4,7 @@ header("Content-type: text/txt; charset=utf-8");
 $key = 666666;
 $servername = "120.27.110.28";
 $username = "root";
-$password = "chenweiqi";
+$password = "weiqi123";
 
 $con = mysql_connect($servername, $username, $password);
 if(!$con){
